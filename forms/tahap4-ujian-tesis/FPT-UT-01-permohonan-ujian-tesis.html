@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>FPT-UT-01 - Formulir Permohonan Ujian Tesis</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<div class="kop-surat">
+  <div class="logo-placeholder">LOGO<br>UNS</div>
+  <div class="kop-text">
+    <h1>FAKULTAS KEGURUAN DAN ILMU PENDIDIKAN<br>UNIVERSITAS SEBELAS MARET</h1>
+    <p>Program Studi Magister Pendidikan Guru Vokasi &mdash; Komisi Tesis</p>
+    <p>Jl. Ahmad Yani 200, Pabelan, Kartasura, Surakarta 57162</p>
+  </div>
+</div>
+<div class="doc-meta">
+  <span><b>Kode Dokumen:</b> FPT-UT-01</span>
+  <span><b>Modul:</b> Tahap 4 &ndash; Ujian Tesis</span>
+  <span><b>Versi:</b> 1.0 &mdash; Agustus 2026</span>
+  <span><b>Sumber:</b> SIM-TESIS (PROP-SIMTESIS-4STAGE-2026)</span>
+</div>
+<h2 class="form-title">Formulir Permohonan Ujian Tesis</h2>
+<p class="form-subtitle">Tahap 4: Ujian Tesis — pendaftaran &amp; unggah 5 berkas digital (paperless)</p>
+
+<form>
+<fieldset>
+<legend>Data Mahasiswa</legend>
+<div class="grid-3"><div><label for="nama">Nama Lengkap <span class="required">*</span></label><input type="text" id="nama" name="nama" placeholder="" required></div><div><label for="nim">NIM <span class="required">*</span></label><input type="text" id="nim" name="nim" placeholder="" required></div><div><label for="judul">Judul Tesis Final <span class="required">*</span></label><input type="text" id="judul" name="judul" placeholder="" required></div></div>
+</fieldset>
+<fieldset>
+<legend>Jadwal Usulan Sidang (Wajib H-14)</legend>
+<div class="grid-3"><div><label for="tgl_pengajuan">Tanggal Pengajuan <span class="required">*</span></label><input type="date" id="tgl_pengajuan" name="tgl_pengajuan" placeholder="" required></div><div><label for="tgl_ujian">Tanggal Ujian Diusulkan <span class="required">*</span> <span class="hint">min. H+14 hari kerja</span></label><input type="date" id="tgl_ujian" name="tgl_ujian" placeholder="" required></div><div><label for="sesi">Sesi Waktu <span class="required">*</span></label><select id="sesi" name="sesi" required><option value="">-- pilih --</option><option value="08.00-10.00">08.00-10.00</option>
+<option value="10.00-12.00">10.00-12.00</option>
+<option value="13.00-15.00">13.00-15.00</option>
+<option value="15.00-17.00">15.00-17.00</option></select></div></div>
+</fieldset>
+<fieldset>
+<legend>Unggah 5 Berkas Digital Naskah Tesis Final</legend>
+<label for="berkas1">Berkas 1 &mdash; Naskah Lengkap (Cover s.d. Lampiran) <span class="required">*</span></label><input type="file" id="berkas1" name="berkas1" required><label for="berkas2">Berkas 2 &mdash; Naskah untuk Ketua Penguji <span class="required">*</span></label><input type="file" id="berkas2" name="berkas2" required><label for="berkas3">Berkas 3 &mdash; Naskah untuk Penguji Bidang Studi <span class="required">*</span></label><input type="file" id="berkas3" name="berkas3" required><label for="berkas4">Berkas 4 &mdash; Naskah untuk Penguji Bidang Pendidikan <span class="required">*</span></label><input type="file" id="berkas4" name="berkas4" required><label for="berkas5">Berkas 5 &mdash; Naskah Arsip Program Studi <span class="required">*</span></label><input type="file" id="berkas5" name="berkas5" required>
+</fieldset>
+<div class="signature-row"><div class="box">Mahasiswa Pengaju<br>(Tanda Tangan / TTE Digital)</div></div>
+<div class="form-actions">
+  <button type="button" class="btn btn-secondary" onclick="window.print()">Cetak / Simpan PDF</button>
+  <button type="submit" class="btn btn-primary">Kirim ke Sistem SIM-TESIS</button>
+</div>
+</form>
+
+<footer class="form-footer">
+  FPT-UT-01 &middot; Dokumen ini digenerate sebagai bagian dari modul Tahap 4 &ndash; Ujian Tesis Sistem Informasi Manajemen Tesis (SIM-TESIS) FKIP UNS.
+</footer>
+</body>
+</html>

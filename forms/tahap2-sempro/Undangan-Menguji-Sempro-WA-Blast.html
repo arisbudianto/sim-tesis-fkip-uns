@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>UND-SP-WA - Undangan Menguji Seminar Proposal (WA Blast)</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<div class="kop-surat">
+  <div class="logo-placeholder">LOGO<br>UNS</div>
+  <div class="kop-text">
+    <h1>FAKULTAS KEGURUAN DAN ILMU PENDIDIKAN<br>UNIVERSITAS SEBELAS MARET</h1>
+    <p>Program Studi Magister Pendidikan Guru Vokasi &mdash; Komisi Tesis</p>
+    <p>Jl. Ahmad Yani 200, Pabelan, Kartasura, Surakarta 57162</p>
+  </div>
+</div>
+<div class="doc-meta">
+  <span><b>Kode Dokumen:</b> UND-SP-WA</span>
+  <span><b>Modul:</b> Tahap 2 &ndash; Sempro</span>
+  <span><b>Versi:</b> 1.0 &mdash; Agustus 2026</span>
+  <span><b>Sumber:</b> SIM-TESIS (PROP-SIMTESIS-4STAGE-2026)</span>
+</div>
+<h2 class="form-title">Undangan Menguji Seminar Proposal (WA Blast)</h2>
+<p class="form-subtitle">Tahap 2: Seminar Proposal — otomasi blast pesan WhatsApp ke 4 penguji</p>
+
+<form>
+<fieldset>
+<legend>Data Penerbitan</legend>
+<div class="grid-3"><div><label for="nomor_surat">Nomor Surat <span class="hint">auto-numbering</span></label><input type="text" id="nomor_surat" name="nomor_surat" placeholder=""></div><div><label for="tgl_terbit">Tanggal Terbit <span class="required">*</span></label><input type="date" id="tgl_terbit" name="tgl_terbit" placeholder="" required></div><div><label for="penandatangan">Penandatangan</label><input type="text" id="penandatangan" name="penandatangan" placeholder="Ketua Program Studi"></div></div>
+</fieldset>
+<fieldset>
+<legend>Susunan Tim Penguji &amp; Agenda</legend>
+<label for="susunan_tim">Susunan Tim Penguji (auto dari SRT-TGS-SP)</label><textarea id="susunan_tim" name="susunan_tim" rows="3"></textarea><div class="grid-3"><div><label for="tgl_sidang">Tanggal Sidang <span class="required">*</span></label><input type="date" id="tgl_sidang" name="tgl_sidang" placeholder="" required></div><div><label for="waktu">Waktu <span class="required">*</span></label><input type="time" id="waktu" name="waktu" placeholder="" required></div><div><label for="mode">Mode <span class="required">*</span></label><select id="mode" name="mode" required><option value="">-- pilih --</option><option value="Luring">Luring</option>
+<option value="Daring (Zoom)">Daring (Zoom)</option>
+<option value="Hybrid">Hybrid</option></select></div></div><div class="grid-2"><div><label for="zoom_id">Zoom Meeting ID</label><input type="text" id="zoom_id" name="zoom_id" placeholder=""></div><div><label for="zoom_pass">Passcode</label><input type="text" id="zoom_pass" name="zoom_pass" placeholder=""></div></div>
+</fieldset>
+<fieldset>
+<legend>Pengiriman WhatsApp Blast</legend>
+<div class="checklist-item"><input type="checkbox" id="wa_naskah" name="wa_naskah" checked><div class="item-body"><div class="item-title">Lampirkan link PDF naskah proposal</div></div></div><div class="checklist-item"><input type="checkbox" id="wa_form" name="wa_form" checked><div class="item-body"><div class="item-title">Lampirkan link form evaluasi online (FPT-TI-03)</div></div></div>
+</fieldset>
+<div class="signature-row"><div class="box">Ketua Program Studi (TTE Digital)<br>(Tanda Tangan / TTE Digital)</div></div>
+<div class="form-actions">
+  <button type="button" class="btn btn-secondary" onclick="window.print()">Cetak / Simpan PDF</button>
+  <button type="submit" class="btn btn-primary">Kirim ke Sistem SIM-TESIS</button>
+</div>
+</form>
+
+<footer class="form-footer">
+  UND-SP-WA &middot; Dokumen ini digenerate sebagai bagian dari modul Tahap 2 &ndash; Sempro Sistem Informasi Manajemen Tesis (SIM-TESIS) FKIP UNS.
+</footer>
+</body>
+</html>

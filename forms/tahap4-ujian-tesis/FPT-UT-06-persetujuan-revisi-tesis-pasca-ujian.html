@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>FPT-UT-06 - Persetujuan Revisi Tesis Pasca Ujian</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<div class="kop-surat">
+  <div class="logo-placeholder">LOGO<br>UNS</div>
+  <div class="kop-text">
+    <h1>FAKULTAS KEGURUAN DAN ILMU PENDIDIKAN<br>UNIVERSITAS SEBELAS MARET</h1>
+    <p>Program Studi Magister Pendidikan Guru Vokasi &mdash; Komisi Tesis</p>
+    <p>Jl. Ahmad Yani 200, Pabelan, Kartasura, Surakarta 57162</p>
+  </div>
+</div>
+<div class="doc-meta">
+  <span><b>Kode Dokumen:</b> FPT-UT-06</span>
+  <span><b>Modul:</b> Tahap 4 &ndash; Ujian Tesis</span>
+  <span><b>Versi:</b> 1.0 &mdash; Agustus 2026</span>
+  <span><b>Sumber:</b> SIM-TESIS (PROP-SIMTESIS-4STAGE-2026)</span>
+</div>
+<h2 class="form-title">Persetujuan Revisi Tesis Pasca Ujian</h2>
+<p class="form-subtitle">Tahap 4: Ujian Tesis — menandai selesainya seluruh siklus studi magister (Grade Locked)</p>
+
+<form>
+<fieldset>
+<legend>Identitas Mahasiswa &amp; Judul Tesis (Read-Only, Auto-Sync dari BAP)</legend>
+<div class="grid-2"><div><label for="nama">Nama Mahasiswa</label><input type="text" id="nama" name="nama" placeholder=""></div><div><label for="nim">NIM</label><input type="text" id="nim" name="nim" placeholder=""></div></div><label for="judul">Judul Tesis (Terkunci)</label><input type="text" id="judul" name="judul" placeholder="">
+</fieldset>
+<fieldset>
+<legend>Matriks Komparasi Revisi 4 Penguji</legend>
+<table class="data-table"><thead><tr><th>No</th><th>Penguji</th><th>Catatan Revisi</th><th>Uraian Hasil Revisi</th><th>No. Halaman</th><th>Status ACC</th></tr></thead><tbody><tr><td>1</td><td><input type="text" name="pgj_1"></td><td><input type="text" name="revcat_1"></td><td><input type="text" name="revhasil_1"></td><td><input type="text" name="revhal_1"></td><td><select name="revstatus_1"><option>Belum</option><option>ACC</option></select></td></tr><tr><td>2</td><td><input type="text" name="pgj_2"></td><td><input type="text" name="revcat_2"></td><td><input type="text" name="revhasil_2"></td><td><input type="text" name="revhal_2"></td><td><select name="revstatus_2"><option>Belum</option><option>ACC</option></select></td></tr><tr><td>3</td><td><input type="text" name="pgj_3"></td><td><input type="text" name="revcat_3"></td><td><input type="text" name="revhasil_3"></td><td><input type="text" name="revhal_3"></td><td><select name="revstatus_3"><option>Belum</option><option>ACC</option></select></td></tr><tr><td>4</td><td><input type="text" name="pgj_4"></td><td><input type="text" name="revcat_4"></td><td><input type="text" name="revhasil_4"></td><td><input type="text" name="revhal_4"></td><td><select name="revstatus_4"><option>Belum</option><option>ACC</option></select></td></tr></tbody></table>
+</fieldset>
+<fieldset>
+<legend>Unggah &amp; Pengesahan</legend>
+<label for="naskah_final">Unggah Naskah Tesis Final Terjilid (Cover s.d. Lampiran) <span class="required">*</span></label><input type="file" id="naskah_final" name="naskah_final" required><div class="checklist-item"><input type="checkbox" id="acc_lengkap" name="acc_lengkap"><div class="item-body"><div class="item-title">Status ACC Lengkap 4/4 Penguji</div><div class="item-constraint">Wajib terpenuhi sebelum pengesahan Ketua Penguji &amp; Kaprodi</div></div></div>
+</fieldset>
+<div class="signature-row"><div class="box">Mahasiswa<br>(Tanda Tangan / TTE Digital)</div><div class="box">Ketua Penguji (QR Code TTE)<br>(Tanda Tangan / TTE Digital)</div><div class="box">Kaprodi (QR Code TTE)<br>(Tanda Tangan / TTE Digital)</div></div>
+<div class="form-actions">
+  <button type="button" class="btn btn-secondary" onclick="window.print()">Cetak / Simpan PDF</button>
+  <button type="submit" class="btn btn-primary">Kirim ke Sistem SIM-TESIS</button>
+</div>
+</form>
+
+<footer class="form-footer">
+  FPT-UT-06 &middot; Dokumen ini digenerate sebagai bagian dari modul Tahap 4 &ndash; Ujian Tesis Sistem Informasi Manajemen Tesis (SIM-TESIS) FKIP UNS.
+</footer>
+</body>
+</html>

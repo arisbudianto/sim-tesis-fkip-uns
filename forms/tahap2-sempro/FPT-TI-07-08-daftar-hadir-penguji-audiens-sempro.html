@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>FPT-TI-07/08 - Daftar Hadir Penguji &amp; Audiens Sempro</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<div class="kop-surat">
+  <div class="logo-placeholder">LOGO<br>UNS</div>
+  <div class="kop-text">
+    <h1>FAKULTAS KEGURUAN DAN ILMU PENDIDIKAN<br>UNIVERSITAS SEBELAS MARET</h1>
+    <p>Program Studi Magister Pendidikan Guru Vokasi &mdash; Komisi Tesis</p>
+    <p>Jl. Ahmad Yani 200, Pabelan, Kartasura, Surakarta 57162</p>
+  </div>
+</div>
+<div class="doc-meta">
+  <span><b>Kode Dokumen:</b> FPT-TI-07/08</span>
+  <span><b>Modul:</b> Tahap 2 &ndash; Sempro</span>
+  <span><b>Versi:</b> 1.0 &mdash; Agustus 2026</span>
+  <span><b>Sumber:</b> SIM-TESIS (PROP-SIMTESIS-4STAGE-2026)</span>
+</div>
+<h2 class="form-title">Daftar Hadir Penguji &amp; Audiens Sempro</h2>
+<p class="form-subtitle">Tahap 2: Seminar Proposal — presensi digital penguji &amp; audiens</p>
+
+<form>
+<fieldset>
+<legend>Data Sidang</legend>
+<div class="grid-3"><div><label for="nama">Nama Mahasiswa <span class="required">*</span></label><input type="text" id="nama" name="nama" placeholder="" required></div><div><label for="nim">NIM <span class="required">*</span></label><input type="text" id="nim" name="nim" placeholder="" required></div><div><label for="tgl">Tanggal Sidang <span class="required">*</span></label><input type="date" id="tgl" name="tgl" placeholder="" required></div></div>
+</fieldset>
+<fieldset>
+<legend>Daftar Hadir Dewan Penguji</legend>
+<table class="data-table"><thead><tr><th>No</th><th>Nama Penguji</th><th>Peran</th><th>Jam Hadir</th><th>Tanda Tangan</th></tr></thead><tbody><tr><td>1</td><td><input type="text" name="pg_nama_1"></td><td><input type="text" name="pg_peran_1"></td><td><input type="time" name="pg_jam_1"></td><td>TTE Digital</td></tr><tr><td>2</td><td><input type="text" name="pg_nama_2"></td><td><input type="text" name="pg_peran_2"></td><td><input type="time" name="pg_jam_2"></td><td>TTE Digital</td></tr><tr><td>3</td><td><input type="text" name="pg_nama_3"></td><td><input type="text" name="pg_peran_3"></td><td><input type="time" name="pg_jam_3"></td><td>TTE Digital</td></tr><tr><td>4</td><td><input type="text" name="pg_nama_4"></td><td><input type="text" name="pg_peran_4"></td><td><input type="time" name="pg_jam_4"></td><td>TTE Digital</td></tr></tbody></table>
+</fieldset>
+<fieldset>
+<legend>Daftar Hadir Audiens (Presensi Barcode)</legend>
+<p class="repeatable-note">Audiens memindai QR Code sidang untuk presensi otomatis; daftar berikut ditampilkan / diekspor oleh sistem.</p><table class="data-table"><thead><tr><th>No</th><th>Nama</th><th>NIM/Instansi</th><th>Waktu Scan</th></tr></thead><tbody><tr><td>1</td><td><input type="text" name="au_nama_1"></td><td><input type="text" name="au_id_1"></td><td><input type="time" name="au_jam_1"></td></tr><tr><td>2</td><td><input type="text" name="au_nama_2"></td><td><input type="text" name="au_id_2"></td><td><input type="time" name="au_jam_2"></td></tr><tr><td>3</td><td><input type="text" name="au_nama_3"></td><td><input type="text" name="au_id_3"></td><td><input type="time" name="au_jam_3"></td></tr></tbody></table>
+</fieldset>
+
+<div class="form-actions">
+  <button type="button" class="btn btn-secondary" onclick="window.print()">Cetak / Simpan PDF</button>
+  <button type="submit" class="btn btn-primary">Kirim ke Sistem SIM-TESIS</button>
+</div>
+</form>
+
+<footer class="form-footer">
+  FPT-TI-07/08 &middot; Dokumen ini digenerate sebagai bagian dari modul Tahap 2 &ndash; Sempro Sistem Informasi Manajemen Tesis (SIM-TESIS) FKIP UNS.
+</footer>
+</body>
+</html>

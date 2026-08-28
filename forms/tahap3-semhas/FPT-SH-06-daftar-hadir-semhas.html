@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>FPT-SH-06 - Daftar Hadir Penguji &amp; Audiens Semhas</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<div class="kop-surat">
+  <div class="logo-placeholder">LOGO<br>UNS</div>
+  <div class="kop-text">
+    <h1>FAKULTAS KEGURUAN DAN ILMU PENDIDIKAN<br>UNIVERSITAS SEBELAS MARET</h1>
+    <p>Program Studi Magister Pendidikan Guru Vokasi &mdash; Komisi Tesis</p>
+    <p>Jl. Ahmad Yani 200, Pabelan, Kartasura, Surakarta 57162</p>
+  </div>
+</div>
+<div class="doc-meta">
+  <span><b>Kode Dokumen:</b> FPT-SH-06</span>
+  <span><b>Modul:</b> Tahap 3 &ndash; Semhas</span>
+  <span><b>Versi:</b> 1.0 &mdash; Agustus 2026</span>
+  <span><b>Sumber:</b> SIM-TESIS (PROP-SIMTESIS-4STAGE-2026)</span>
+</div>
+<h2 class="form-title">Daftar Hadir Penguji &amp; Audiens Semhas</h2>
+<p class="form-subtitle">Tahap 3: Seminar Hasil — presensi digital</p>
+
+<form>
+<fieldset>
+<legend>Data Sidang</legend>
+<div class="grid-3"><div><label for="nama">Nama Mahasiswa <span class="required">*</span></label><input type="text" id="nama" name="nama" placeholder="" required></div><div><label for="nim">NIM <span class="required">*</span></label><input type="text" id="nim" name="nim" placeholder="" required></div><div><label for="tgl">Tanggal Sidang <span class="required">*</span></label><input type="date" id="tgl" name="tgl" placeholder="" required></div></div>
+</fieldset>
+<fieldset>
+<legend>Daftar Hadir Dewan Penguji &amp; Audiens</legend>
+<table class="data-table"><thead><tr><th>No</th><th>Nama</th><th>Peran</th><th>Jam Hadir</th><th>Metode</th></tr></thead><tbody><tr><td>1</td><td><input type="text" name="hd_nama_1"></td><td><input type="text" name="hd_peran_1"></td><td><input type="time" name="hd_jam_1"></td><td>Digital / Barcode</td></tr><tr><td>2</td><td><input type="text" name="hd_nama_2"></td><td><input type="text" name="hd_peran_2"></td><td><input type="time" name="hd_jam_2"></td><td>Digital / Barcode</td></tr><tr><td>3</td><td><input type="text" name="hd_nama_3"></td><td><input type="text" name="hd_peran_3"></td><td><input type="time" name="hd_jam_3"></td><td>Digital / Barcode</td></tr><tr><td>4</td><td><input type="text" name="hd_nama_4"></td><td><input type="text" name="hd_peran_4"></td><td><input type="time" name="hd_jam_4"></td><td>Digital / Barcode</td></tr></tbody></table>
+</fieldset>
+
+<div class="form-actions">
+  <button type="button" class="btn btn-secondary" onclick="window.print()">Cetak / Simpan PDF</button>
+  <button type="submit" class="btn btn-primary">Kirim ke Sistem SIM-TESIS</button>
+</div>
+</form>
+
+<footer class="form-footer">
+  FPT-SH-06 &middot; Dokumen ini digenerate sebagai bagian dari modul Tahap 3 &ndash; Semhas Sistem Informasi Manajemen Tesis (SIM-TESIS) FKIP UNS.
+</footer>
+</body>
+</html>

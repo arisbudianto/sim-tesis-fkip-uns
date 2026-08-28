@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>FPT-PB-01 - Formulir Pengajuan Topik &amp; Usulan Pembimbing</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<div class="kop-surat">
+  <div class="logo-placeholder">LOGO<br>UNS</div>
+  <div class="kop-text">
+    <h1>FAKULTAS KEGURUAN DAN ILMU PENDIDIKAN<br>UNIVERSITAS SEBELAS MARET</h1>
+    <p>Program Studi Magister Pendidikan Guru Vokasi &mdash; Komisi Tesis</p>
+    <p>Jl. Ahmad Yani 200, Pabelan, Kartasura, Surakarta 57162</p>
+  </div>
+</div>
+<div class="doc-meta">
+  <span><b>Kode Dokumen:</b> FPT-PB-01</span>
+  <span><b>Modul:</b> Tahap 1 &ndash; Penentuan Pembimbing</span>
+  <span><b>Versi:</b> 1.0 &mdash; Agustus 2026</span>
+  <span><b>Sumber:</b> SIM-TESIS (PROP-SIMTESIS-4STAGE-2026)</span>
+</div>
+<h2 class="form-title">Formulir Pengajuan Topik &amp; Usulan Pembimbing</h2>
+<p class="form-subtitle">Tahap 1: Penentuan Pembimbing — Diisi mahasiswa di awal semester penyusunan tesis</p>
+
+<form>
+<fieldset>
+<legend>Data Mahasiswa</legend>
+<div class="grid-3"><div><label for="nama">Nama Lengkap <span class="required">*</span></label><input type="text" id="nama" name="nama" placeholder="" required></div><div><label for="nim">NIM <span class="required">*</span></label><input type="text" id="nim" name="nim" placeholder="" required></div><div><label for="prodi">Program Studi</label><input type="text" id="prodi" name="prodi" placeholder="S2 Pendidikan Guru Vokasi FKIP UNS"></div></div><div class="grid-3"><div><label for="angkatan">Angkatan <span class="required">*</span></label><input type="number" id="angkatan" name="angkatan" placeholder="" required></div><div><label for="hp">No. HP / WA <span class="required">*</span></label><input type="tel" id="hp" name="hp" placeholder="" required></div><div><label for="email">Email <span class="required">*</span></label><input type="email" id="email" name="email" placeholder="" required></div></div>
+</fieldset>
+<fieldset>
+<legend>Usulan Topik Penelitian</legend>
+<label for="judul_topik">Judul / Topik Riset <span class="required">*</span></label><input type="text" id="judul_topik" name="judul_topik" placeholder="" required><label for="bidang_minat">Bidang Minat <span class="required">*</span></label><input type="text" id="bidang_minat" name="bidang_minat" placeholder="" required><label for="ringkasan">Ringkasan Singkat Topik (latar belakang, rumusan masalah awal) <span class="required">*</span></label><textarea id="ringkasan" name="ringkasan" rows="4" required></textarea><label for="outline_topik">Unggah Kerangka/Outline Topik (opsional) <span class="hint">PDF, maks. 5MB</span></label><input type="file" id="outline_topik" name="outline_topik">
+</fieldset>
+<fieldset>
+<legend>Usulan Pembimbing (opsional, sebagai bahan pertimbangan Komisi Tesis)</legend>
+<div class="grid-2"><div><label for="usulan_pemb1">Usulan Pembimbing 1 (Bidang Ilmu)</label><select id="usulan_pemb1" name="usulan_pemb1"><option value="">-- pilih --</option><option value="-- diisi Komisi Tesis --">-- diisi Komisi Tesis --</option></select></div><div><label for="usulan_pemb2">Usulan Pembimbing 2 (Metodologi/Kependidikan)</label><select id="usulan_pemb2" name="usulan_pemb2"><option value="">-- pilih --</option><option value="-- diisi Komisi Tesis --">-- diisi Komisi Tesis --</option></select></div></div>
+</fieldset>
+<fieldset>
+<legend>Bagian Komisi Tesis (Diisi Petugas)</legend>
+<div class="grid-2"><div><label for="pemb1_final">Penetapan Pembimbing 1</label><select id="pemb1_final" name="pemb1_final"><option value="">-- pilih --</option><option value="-- pilih dosen --">-- pilih dosen --</option></select></div><div><label for="pemb2_final">Penetapan Pembimbing 2</label><select id="pemb2_final" name="pemb2_final"><option value="">-- pilih --</option><option value="-- pilih dosen --">-- pilih dosen --</option></select></div></div><div class="grid-3"><div><label for="kuota1">Cek Kuota Otomatis Pembimbing 1 <span class="hint">terisi otomatis oleh sistem</span></label><input type="text" id="kuota1" name="kuota1" placeholder=""></div><div><label for="kuota2">Cek Kuota Otomatis Pembimbing 2 <span class="hint">terisi otomatis oleh sistem</span></label><input type="text" id="kuota2" name="kuota2" placeholder=""></div><div><label for="status_penetapan">Status <span class="hint">pending/disetujui/ditolak</span></label><input type="text" id="status_penetapan" name="status_penetapan" placeholder=""></div></div><div class="grid-2"><div><label for="nomor_sk">Nomor SK Pembimbing</label><input type="text" id="nomor_sk" name="nomor_sk" placeholder=""></div><div><label for="tanggal_sk">Tanggal SK</label><input type="date" id="tanggal_sk" name="tanggal_sk" placeholder=""></div></div>
+</fieldset>
+<div class="signature-row"><div class="box">Mahasiswa Pengaju<br>(Tanda Tangan / TTE Digital)</div><div class="box">Ketua Komisi Tesis<br>(Tanda Tangan / TTE Digital)</div><div class="box">Kaprodi (Penerbit SK)<br>(Tanda Tangan / TTE Digital)</div></div>
+<div class="form-actions">
+  <button type="button" class="btn btn-secondary" onclick="window.print()">Cetak / Simpan PDF</button>
+  <button type="submit" class="btn btn-primary">Kirim ke Sistem SIM-TESIS</button>
+</div>
+</form>
+
+<footer class="form-footer">
+  FPT-PB-01 &middot; Dokumen ini digenerate sebagai bagian dari modul Tahap 1 &ndash; Penentuan Pembimbing Sistem Informasi Manajemen Tesis (SIM-TESIS) FKIP UNS.
+</footer>
+</body>
+</html>

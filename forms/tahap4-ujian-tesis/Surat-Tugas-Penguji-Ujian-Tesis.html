@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>SRT-TGS-UT - Surat Tugas Dewan Penguji Ujian Tesis</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<div class="kop-surat">
+  <div class="logo-placeholder">LOGO<br>UNS</div>
+  <div class="kop-text">
+    <h1>FAKULTAS KEGURUAN DAN ILMU PENDIDIKAN<br>UNIVERSITAS SEBELAS MARET</h1>
+    <p>Program Studi Magister Pendidikan Guru Vokasi &mdash; Komisi Tesis</p>
+    <p>Jl. Ahmad Yani 200, Pabelan, Kartasura, Surakarta 57162</p>
+  </div>
+</div>
+<div class="doc-meta">
+  <span><b>Kode Dokumen:</b> SRT-TGS-UT</span>
+  <span><b>Modul:</b> Tahap 4 &ndash; Ujian Tesis</span>
+  <span><b>Versi:</b> 1.0 &mdash; Agustus 2026</span>
+  <span><b>Sumber:</b> SIM-TESIS (PROP-SIMTESIS-4STAGE-2026)</span>
+</div>
+<h2 class="form-title">Surat Tugas Dewan Penguji Ujian Tesis</h2>
+<p class="form-subtitle">Tahap 4: Ujian Tesis — auto-numbering surat keluar dekanat, memuat 4 penguji &amp; jadwal</p>
+
+<form>
+<fieldset>
+<legend>Data Penerbitan</legend>
+<div class="grid-3"><div><label for="nomor_surat">Nomor Surat <span class="hint">auto-numbering dekanat</span></label><input type="text" id="nomor_surat" name="nomor_surat" placeholder=""></div><div><label for="tgl_terbit">Tanggal Terbit <span class="required">*</span></label><input type="date" id="tgl_terbit" name="tgl_terbit" placeholder="" required></div><div><label for="penandatangan">Penandatangan</label><input type="text" id="penandatangan" name="penandatangan" placeholder="Wakil Dekan Bidang Akademik"></div></div>
+</fieldset>
+<fieldset>
+<legend>Susunan 4 Dewan Penguji Definitif</legend>
+<table class="data-table"><thead><tr><th>No</th><th>Nama</th><th>NIP</th><th>Pangkat/Golongan</th><th>Peran</th></tr></thead><tbody><tr><td>1</td><td><input type="text" name="pn_nama_1"></td><td><input type="text" name="pn_nip_1"></td><td><input type="text" name="pn_pangkat_1"></td><td><input type="text" name="pn_peran_1"></td></tr><tr><td>2</td><td><input type="text" name="pn_nama_2"></td><td><input type="text" name="pn_nip_2"></td><td><input type="text" name="pn_pangkat_2"></td><td><input type="text" name="pn_peran_2"></td></tr><tr><td>3</td><td><input type="text" name="pn_nama_3"></td><td><input type="text" name="pn_nip_3"></td><td><input type="text" name="pn_pangkat_3"></td><td><input type="text" name="pn_peran_3"></td></tr><tr><td>4</td><td><input type="text" name="pn_nama_4"></td><td><input type="text" name="pn_nip_4"></td><td><input type="text" name="pn_pangkat_4"></td><td><input type="text" name="pn_peran_4"></td></tr></tbody></table>
+</fieldset>
+<fieldset>
+<legend>Jadwal &amp; Lembar Pernyataan Tugas</legend>
+<div class="grid-2"><div><label for="tgl_ujian">Tanggal Ujian <span class="required">*</span></label><input type="date" id="tgl_ujian" name="tgl_ujian" placeholder="" required></div><div><label for="ruang">Ruang / Zoom <span class="required">*</span></label><input type="text" id="ruang" name="ruang" placeholder="" required></div></div>
+</fieldset>
+<div class="signature-row"><div class="box">Wakil Dekan Bidang Akademik (QR Code TTE)<br>(Tanda Tangan / TTE Digital)</div></div>
+<div class="form-actions">
+  <button type="button" class="btn btn-secondary" onclick="window.print()">Cetak / Simpan PDF</button>
+  <button type="submit" class="btn btn-primary">Kirim ke Sistem SIM-TESIS</button>
+</div>
+</form>
+
+<footer class="form-footer">
+  SRT-TGS-UT &middot; Dokumen ini digenerate sebagai bagian dari modul Tahap 4 &ndash; Ujian Tesis Sistem Informasi Manajemen Tesis (SIM-TESIS) FKIP UNS.
+</footer>
+</body>
+</html>

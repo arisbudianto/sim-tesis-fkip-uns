@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>FPT-PB-02 - Logbook Bimbingan Digital</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<div class="kop-surat">
+  <div class="logo-placeholder">LOGO<br>UNS</div>
+  <div class="kop-text">
+    <h1>FAKULTAS KEGURUAN DAN ILMU PENDIDIKAN<br>UNIVERSITAS SEBELAS MARET</h1>
+    <p>Program Studi Magister Pendidikan Guru Vokasi &mdash; Komisi Tesis</p>
+    <p>Jl. Ahmad Yani 200, Pabelan, Kartasura, Surakarta 57162</p>
+  </div>
+</div>
+<div class="doc-meta">
+  <span><b>Kode Dokumen:</b> FPT-PB-02</span>
+  <span><b>Modul:</b> Tahap 1 &ndash; Penentuan Pembimbing</span>
+  <span><b>Versi:</b> 1.0 &mdash; Agustus 2026</span>
+  <span><b>Sumber:</b> SIM-TESIS (PROP-SIMTESIS-4STAGE-2026)</span>
+</div>
+<h2 class="form-title">Logbook Bimbingan Digital</h2>
+<p class="form-subtitle">Tahap 1: Penentuan Pembimbing — Dicatat berkelanjutan sepanjang proses penyusunan tesis</p>
+
+<form>
+<fieldset>
+<legend>Identitas</legend>
+<div class="grid-2"><div><label for="nama">Nama Mahasiswa <span class="required">*</span></label><input type="text" id="nama" name="nama" placeholder="" required></div><div><label for="nim">NIM <span class="required">*</span></label><input type="text" id="nim" name="nim" placeholder="" required></div></div><div class="grid-2"><div><label for="dosen">Dosen Pembimbing <span class="required">*</span></label><select id="dosen" name="dosen" required><option value="">-- pilih --</option><option value="Pembimbing 1">Pembimbing 1</option>
+<option value="Pembimbing 2">Pembimbing 2</option></select></div><div><label for="tahap">Tahap Terkait <span class="required">*</span></label><select id="tahap" name="tahap" required><option value="">-- pilih --</option><option value="Umum / Pembimbing">Umum / Pembimbing</option>
+<option value="Sempro">Sempro</option>
+<option value="Semhas">Semhas</option>
+<option value="Ujian Tesis">Ujian Tesis</option></select></div></div><div class="grid-2"><div><label for="tanggal">Tanggal Bimbingan <span class="required">*</span></label><input type="date" id="tanggal" name="tanggal" placeholder="" required></div><div><label for="media">Media Bimbingan <span class="required">*</span></label><select id="media" name="media" required><option value="">-- pilih --</option><option value="Tatap Muka">Tatap Muka</option>
+<option value="Daring (Zoom/Meet)">Daring (Zoom/Meet)</option>
+<option value="WhatsApp/Chat">WhatsApp/Chat</option></select></div></div>
+</fieldset>
+<fieldset>
+<legend>Isi Konsultasi</legend>
+<label for="catatan_mhs">Materi / Poin yang Dikonsultasikan Mahasiswa <span class="required">*</span></label><textarea id="catatan_mhs" name="catatan_mhs" rows="4" required></textarea><label for="catatan_dosen">Catatan &amp; Arahan Dosen Pembimbing</label><textarea id="catatan_dosen" name="catatan_dosen" rows="4"></textarea>
+</fieldset>
+<fieldset>
+<legend>Persetujuan Dosen Pembimbing</legend>
+<div class="checklist-item"><input type="checkbox" id="approve" name="approve"><div class="item-body"><div class="item-title">Saya menyetujui bahwa sesi bimbingan ini telah dilaksanakan sesuai catatan di atas</div></div></div>
+</fieldset>
+<div class="signature-row"><div class="box">Mahasiswa<br>(Tanda Tangan / TTE Digital)</div><div class="box">Dosen Pembimbing (TTE Digital)<br>(Tanda Tangan / TTE Digital)</div></div>
+<div class="form-actions">
+  <button type="button" class="btn btn-secondary" onclick="window.print()">Cetak / Simpan PDF</button>
+  <button type="submit" class="btn btn-primary">Kirim ke Sistem SIM-TESIS</button>
+</div>
+</form>
+
+<footer class="form-footer">
+  FPT-PB-02 &middot; Dokumen ini digenerate sebagai bagian dari modul Tahap 1 &ndash; Penentuan Pembimbing Sistem Informasi Manajemen Tesis (SIM-TESIS) FKIP UNS.
+</footer>
+</body>
+</html>
