@@ -12,6 +12,27 @@ class RevisiDokumenController extends Controller
 {
     public function submitMatriks(Request $request, $sidangId)
     {
+        // GATE State Machine: mahasiswa hanya boleh submit matriks revisi
+        // JIKA sidang ini sudah direkap nilainya oleh Komisi Tesis
+        // (PenilaianSidangController::rekapNilaiKomisi) DAN keputusannya
+        // bukan 'ujian_ulang' (kalau ujian ulang, tidak ada revisi —
+        // mahasiswa wajib mengulang sidang, bukan mengirim revisi).
+        $sidang = AktivitasSidang::with('manajemenNilai')->findOrFail($sidangId);
+
+        if (!$sidang->manajemenNilai) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Matriks revisi belum bisa diajukan: Komisi Tesis belum merekap nilai & keputusan sidang ini.'
+            ], 422);
+        }
+
+        if ($sidang->manajemenNilai->keputusan_sidang === 'ujian_ulang') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Keputusan sidang adalah Ujian Ulang — mahasiswa wajib mengulang sidang, bukan mengirim matriks revisi.'
+            ], 422);
+        }
+
         $validated = $request->validate([
             'naskah_revisi_final_url' => 'required|string',
             'bukti_luaran_final_url' => 'nullable|string',

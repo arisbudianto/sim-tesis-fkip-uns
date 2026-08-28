@@ -6,6 +6,7 @@ use App\Models\AktivitasSidang;
 use App\Models\PengujiSidang;
 use App\Models\PengajuanTesis;
 use App\Services\AntiConflictScheduler;
+use App\Services\LifecycleStateMachine;
 use Illuminate\Http\Request;
 
 class KomisiTesisController extends Controller
@@ -27,6 +28,14 @@ class KomisiTesisController extends Controller
 
     private function createSidangWithPenguji(Request $request, string $pengajuanId, string $tahap)
     {
+        // GATE State Machine: Komisi Tesis tidak boleh menjadwalkan sidang
+        // untuk tahap yang belum "terbuka" bagi mahasiswa tersebut (mis.
+        // menjadwalkan Semhas padahal mahasiswa masih di tahap Sempro).
+        $tesis = PengajuanTesis::findOrFail($pengajuanId);
+        if ($blockReason = LifecycleStateMachine::blockReasonForSidang($tesis, $tahap)) {
+            return response()->json(['status' => 'error', 'message' => $blockReason], 422);
+        }
+
         $validated = $request->validate([
             'waktu_mulai' => 'required|date',
             'waktu_selesai' => 'required|date|after:waktu_mulai',
