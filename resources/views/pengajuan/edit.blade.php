@@ -58,8 +58,52 @@
             </div>
         </div>
 
-        <button type="submit" class="btn">Simpan Perubahan</button>
+        <button type="submit" class="btn">Simpan Judul & Fokus</button>
     </form>
+
+    <div class="box">
+        <div class="box-title" style="font-size:15px; margin-top:0;">Atur Pembimbing 1 & 2</div>
+        <form action="{{ route('pengajuan.alokasi', $pengajuan->id) }}" method="POST">
+            @csrf
+            <div class="form-group">
+                <label for="pembimbing_1_id">Pembimbing 1 (Spesialis Studi) <span style="color:#dc2626">*</span></label>
+                <select id="pembimbing_1_id" name="pembimbing_1_id" class="form-control" required>
+                    <option value="">-- Pilih Dosen --</option>
+                    @foreach($dosens as $d)
+                        <option value="{{ $d->id }}" @selected(old('pembimbing_1_id', $pengajuan->pembimbing_1_id) === $d->id)>
+                            {{ $d->name }} (Kuota Maks: {{ $d->kuota_bimbingan_maks }})
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="pembimbing_2_id">Pembimbing 2 (Spesialis Kependidikan) <span style="color:#dc2626">*</span></label>
+                <select id="pembimbing_2_id" name="pembimbing_2_id" class="form-control" required>
+                    <option value="">-- Pilih Dosen --</option>
+                    @foreach($dosens as $d)
+                        <option value="{{ $d->id }}" @selected(old('pembimbing_2_id', $pengajuan->pembimbing_2_id) === $d->id)>
+                            {{ $d->name }} (Bidang: {{ $d->bidang_keahlian ?? 'Kependidikan' }})
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="nomor_sk_pembimbing">Nomor SK Dekan <span style="color:#dc2626">*</span></label>
+                <input type="text" id="nomor_sk_pembimbing" name="nomor_sk_pembimbing" class="form-control" value="{{ old('nomor_sk_pembimbing', $pengajuan->nomor_sk_pembimbing ?? 'SK/'.date('Y').'/FKIP-UNS') }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="tanggal_sk_pembimbing">Tanggal Penetapan SK <span style="color:#dc2626">*</span></label>
+                <input type="date" id="tanggal_sk_pembimbing" name="tanggal_sk_pembimbing" class="form-control" value="{{ old('tanggal_sk_pembimbing', optional($pengajuan->tanggal_sk_pembimbing)->format('Y-m-d') ?? date('Y-m-d')) }}" required>
+            </div>
+
+            <button type="submit" class="btn" style="background:#16a34a;">
+                {{ ($pengajuan->pembimbing1 && $pengajuan->pembimbing2) ? 'Ubah Pembimbing' : 'Tetapkan Pembimbing' }}
+            </button>
+        </form>
+    </div>
 </div>
 </body>
 </html>

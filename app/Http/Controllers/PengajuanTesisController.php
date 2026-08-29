@@ -43,8 +43,9 @@ class PengajuanTesisController extends Controller
      */
     public function edit($id)
     {
-        $pengajuan = PengajuanTesis::with('mahasiswa')->findOrFail($id);
-        return view('pengajuan.edit', compact('pengajuan'));
+        $pengajuan = PengajuanTesis::with(['mahasiswa', 'pembimbing1', 'pembimbing2'])->findOrFail($id);
+        $dosens = User::where('role', 'dosen')->get();
+        return view('pengajuan.edit', compact('pengajuan', 'dosens'));
     }
 
     public function update(Request $request, $id)
@@ -108,16 +109,26 @@ class PengajuanTesisController extends Controller
         ]);
 
         if (!AdvisorQuotaEngine::checkQuota($validated['pembimbing_1_id'])) {
-            return response()->json(['status' => 'error', 'message' => 'Pembimbing 1 melebihi kuota bimbingan!'], 422);
+            $msg = 'Pembimbing 1 melebihi kuota bimbingan!';
+            return $request->wantsJson()
+                ? response()->json(['status' => 'error', 'message' => $msg], 422)
+                : back()->withErrors(['error' => $msg])->withInput();
         }
 
         if (!AdvisorQuotaEngine::checkQuota($validated['pembimbing_2_id'])) {
-            return response()->json(['status' => 'error', 'message' => 'Pembimbing 2 melebihi kuota bimbingan!'], 422);
+            $msg = 'Pembimbing 2 melebihi kuota bimbingan!';
+            return $request->wantsJson()
+                ? response()->json(['status' => 'error', 'message' => $msg], 422)
+                : back()->withErrors(['error' => $msg])->withInput();
         }
 
         $pengajuan = PengajuanTesis::findOrFail($id);
         $pengajuan->update($validated);
 
-        return response()->json(['status' => 'success', 'message' => 'Dosen pembimbing 1 & 2 berhasil dialokasikan', 'data' => $pengajuan]);
+        if ($request->wantsJson()) {
+            return response()->json(['status' => 'success', 'message' => 'Dosen pembimbing 1 & 2 berhasil dialokasikan', 'data' => $pengajuan]);
+        }
+
+        return redirect()->route('dashboard')->with('success', 'Pembimbing 1 & 2 berhasil dialokasikan untuk ' . ($pengajuan->mahasiswa->name ?? 'mahasiswa') . '.');
     }
 }
