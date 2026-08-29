@@ -10,6 +10,8 @@ use App\Http\Controllers\KomisiTesisController;
 use App\Http\Controllers\PenilaianSidangController;
 use App\Http\Controllers\RevisiDokumenController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DokumenCetakController;
+use App\Http\Controllers\VerifikasiDokumenController;
 
 Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
@@ -62,3 +64,8 @@ Route::prefix('revisi')->name('revisi.')->group(function () {
     Route::post('/acc-penguji/{revisiPengujiId}', [RevisiDokumenController::class, 'accPenguji'])->name('accPenguji');
     Route::post('/pengesahan-kaprodi/{revisiId}', [RevisiDokumenController::class, 'pengesahanKaprodi'])->name('pengesahanKaprodi');
 });
+
+// Generator PDF & QR TTE: cetak formulir resmi (FPT-TI-01..09, Surat Tugas
+// Wadek I, BAP) dan halaman verifikasi publik hasil scan QR.
+Route::get('/dokumen/cetak/{kode}/{id}', [DokumenCetakController::class, 'show'])->name('dokumen.cetak');
+Route::get('/verifikasi/{hash}', [VerifikasiDokumenController::class, 'show'])->name('dokumen.verifikasi');

@@ -66,20 +66,20 @@
     <!-- Bar Navigasi Publik & Profil -->
     <div class="topbar">
         <div class="topbar-left">
-            <a href="{{ route('public.index') }}" class="topbar-link">🏠 Halaman Publik</a>
-            <a href="{{ route('public.panduan') }}" class="topbar-link">📖 Panduan SOP 4-Tahap</a>
+            <a href="<?php echo e(route('public.index')); ?>" class="topbar-link">🏠 Halaman Publik</a>
+            <a href="<?php echo e(route('public.panduan')); ?>" class="topbar-link">📖 Panduan SOP 4-Tahap</a>
         </div>
         <div class="topbar-right">
-            @auth
-                <span class="user-pill">👤 {{ Auth::user()->name }} ({{ strtoupper(Auth::user()->role) }})</span>
-                <form action="{{ route('logout') }}" method="POST" style="display:inline;">
-                    @csrf
+            <?php if(auth()->guard()->check()): ?>
+                <span class="user-pill">👤 <?php echo e(Auth::user()->name); ?> (<?php echo e(strtoupper(Auth::user()->role)); ?>)</span>
+                <form action="<?php echo e(route('logout')); ?>" method="POST" style="display:inline;">
+                    <?php echo csrf_field(); ?>
                     <button type="submit" class="btn btn-sm btn-danger">Keluar (Logout)</button>
                 </form>
-            @else
-                <a href="{{ route('login') }}" class="btn btn-sm btn-primary">Masuk (Login)</a>
-                <a href="{{ route('register') }}" class="btn btn-sm btn-success">Daftar Akun</a>
-            @endauth
+            <?php else: ?>
+                <a href="<?php echo e(route('login')); ?>" class="btn btn-sm btn-primary">Masuk (Login)</a>
+                <a href="<?php echo e(route('register')); ?>" class="btn btn-sm btn-success">Daftar Akun</a>
+            <?php endif; ?>
         </div>
     </div>
 
@@ -91,23 +91,23 @@
     <div class="grid">
         <div class="card">
             <h3>Tahap 1: Bimbingan</h3>
-            <div class="count">{{ $stats['tahap_1_bimbingan'] ?? 0 }}</div>
+            <div class="count"><?php echo e($stats['tahap_1_bimbingan'] ?? 0); ?></div>
         </div>
         <div class="card">
             <h3>Tahap 2: Sempro</h3>
-            <div class="count">{{ $stats['tahap_2_sempro'] ?? 0 }}</div>
+            <div class="count"><?php echo e($stats['tahap_2_sempro'] ?? 0); ?></div>
         </div>
         <div class="card">
             <h3>Tahap 3: Semhas</h3>
-            <div class="count">{{ $stats['tahap_3_semhas'] ?? 0 }}</div>
+            <div class="count"><?php echo e($stats['tahap_3_semhas'] ?? 0); ?></div>
         </div>
         <div class="card">
             <h3>Tahap 4: Ujian Tesis</h3>
-            <div class="count">{{ $stats['tahap_4_ujian'] ?? 0 }}</div>
+            <div class="count"><?php echo e($stats['tahap_4_ujian'] ?? 0); ?></div>
         </div>
         <div class="card" style="border-left-color: #10b981;">
             <h3>Lulus / Yudisium</h3>
-            <div class="count">{{ $stats['selesai_yudisium'] ?? 0 }}</div>
+            <div class="count"><?php echo e($stats['selesai_yudisium'] ?? 0); ?></div>
         </div>
     </div>
 
@@ -136,26 +136,27 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($pengajuans as $p)
+                    <?php $__empty_1 = true; $__currentLoopData = $pengajuans; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $p): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                     <tr>
-                        <td><strong>{{ $p->mahasiswa->identifier ?? '-' }}</strong><br>{{ $p->mahasiswa->name ?? '-' }}</td>
-                        <td>{{ $p->judul_tesis }}<br><small style="color:#64748b;">Fokus: {{ $p->bidang_fokus }}</small></td>
+                        <td><strong><?php echo e($p->mahasiswa->identifier ?? '-'); ?></strong><br><?php echo e($p->mahasiswa->name ?? '-'); ?></td>
+                        <td><?php echo e($p->judul_tesis); ?><br><small style="color:#64748b;">Fokus: <?php echo e($p->bidang_fokus); ?></small></td>
                         <td>
-                            1. {{ $p->pembimbing1->name ?? 'Belum Dialokasikan' }}<br>
-                            2. {{ $p->pembimbing2->name ?? 'Belum Dialokasikan' }}
+                            1. <?php echo e($p->pembimbing1->name ?? 'Belum Dialokasikan'); ?><br>
+                            2. <?php echo e($p->pembimbing2->name ?? 'Belum Dialokasikan'); ?>
+
                         </td>
                         <td>
-                            @if($p->status_tahap === 'tahap_1_bimbingan') <span class="badge badge-blue">Tahap 1: Bimbingan</span>
-                            @elseif($p->status_tahap === 'tahap_2_sempro') <span class="badge badge-yellow">Tahap 2: Sempro</span>
-                            @elseif($p->status_tahap === 'tahap_3_semhas') <span class="badge badge-purple">Tahap 3: Semhas</span>
-                            @elseif($p->status_tahap === 'tahap_4_ujian') <span class="badge badge-indigo">Tahap 4: Ujian Tesis</span>
-                            @else <span class="badge badge-green">Selesai / Siap Yudisium</span>
-                            @endif
+                            <?php if($p->status_tahap === 'tahap_1_bimbingan'): ?> <span class="badge badge-blue">Tahap 1: Bimbingan</span>
+                            <?php elseif($p->status_tahap === 'tahap_2_sempro'): ?> <span class="badge badge-yellow">Tahap 2: Sempro</span>
+                            <?php elseif($p->status_tahap === 'tahap_3_semhas'): ?> <span class="badge badge-purple">Tahap 3: Semhas</span>
+                            <?php elseif($p->status_tahap === 'tahap_4_ujian'): ?> <span class="badge badge-indigo">Tahap 4: Ujian Tesis</span>
+                            <?php else: ?> <span class="badge badge-green">Selesai / Siap Yudisium</span>
+                            <?php endif; ?>
                         </td>
                     </tr>
-                    @empty
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                     <tr><td colspan="4" style="text-align: center; color: #64748b;">Belum ada data pengajuan tesis. Silakan isi form pada tab FR-01.</td></tr>
-                    @endforelse
+                    <?php endif; ?>
                 </tbody>
             </table>
         </div>
@@ -166,14 +167,14 @@
         <div class="form-grid">
             <div class="box">
                 <div class="box-title">Mahasiswa: Ajukan Judul Tesis (FR-01)</div>
-                <form action="{{ route('pengajuan.store') }}" method="POST">
-                    @csrf
+                <form action="<?php echo e(route('pengajuan.store')); ?>" method="POST">
+                    <?php echo csrf_field(); ?>
                     <div class="form-group">
                         <label>Pilih Mahasiswa:</label>
                         <select name="mahasiswa_id" class="form-control" required>
-                            @foreach($mahasiswas as $m)
-                                <option value="{{ $m->id }}">{{ $m->identifier }} - {{ $m->name }}</option>
-                            @endforeach
+                            <?php $__currentLoopData = $mahasiswas; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $m): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <option value="<?php echo e($m->id); ?>"><?php echo e($m->identifier); ?> - <?php echo e($m->name); ?></option>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </select>
                     </div>
                     <div class="form-group">
@@ -191,39 +192,39 @@
             <div class="box">
                 <div class="box-title">Komisi Tesis: Alokasi Pembimbing 1 & 2 (FR-01)</div>
                 <form id="form-alokasi" method="POST">
-                    @csrf
+                    <?php echo csrf_field(); ?>
                     <div class="form-group">
                         <label>Pilih Judul Mahasiswa:</label>
                         <select id="select-pengajuan" class="form-control" onchange="updateAlokasiAction(this.value)">
                             <option value="">-- Pilih Pengajuan Tesis --</option>
-                            @foreach($pengajuans as $p)
-                                <option value="{{ $p->id }}">{{ $p->mahasiswa->name }} - {{ Str::limit($p->judul_tesis, 40) }}</option>
-                            @endforeach
+                            <?php $__currentLoopData = $pengajuans; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $p): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <option value="<?php echo e($p->id); ?>"><?php echo e($p->mahasiswa->name); ?> - <?php echo e(Str::limit($p->judul_tesis, 40)); ?></option>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </select>
                     </div>
                     <div class="form-group">
                         <label>Pembimbing 1 (Spesialis Studi):</label>
                         <select name="pembimbing_1_id" class="form-control" required>
-                            @foreach($dosens as $d)
-                                <option value="{{ $d->id }}">{{ $d->name }} (Kuota Maks: {{ $d->kuota_bimbingan_maks }})</option>
-                            @endforeach
+                            <?php $__currentLoopData = $dosens; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $d): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <option value="<?php echo e($d->id); ?>"><?php echo e($d->name); ?> (Kuota Maks: <?php echo e($d->kuota_bimbingan_maks); ?>)</option>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </select>
                     </div>
                     <div class="form-group">
                         <label>Pembimbing 2 (Spesialis Kependidikan):</label>
                         <select name="pembimbing_2_id" class="form-control" required>
-                            @foreach($dosens as $d)
-                                <option value="{{ $d->id }}">{{ $d->name }} (Bidang: {{ $d->bidang_keahlian ?? 'Kependidikan' }})</option>
-                            @endforeach
+                            <?php $__currentLoopData = $dosens; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $d): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <option value="<?php echo e($d->id); ?>"><?php echo e($d->name); ?> (Bidang: <?php echo e($d->bidang_keahlian ?? 'Kependidikan'); ?>)</option>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </select>
                     </div>
                     <div class="form-group">
                         <label>Nomor SK Dekan:</label>
-                        <input type="text" name="nomor_sk_pembimbing" class="form-control" value="SK/{{ date('Y') }}/FKIP-UNS" required>
+                        <input type="text" name="nomor_sk_pembimbing" class="form-control" value="SK/<?php echo e(date('Y')); ?>/FKIP-UNS" required>
                     </div>
                     <div class="form-group">
                         <label>Tanggal Penetapan SK:</label>
-                        <input type="date" name="tanggal_sk_pembimbing" class="form-control" value="{{ date('Y-m-d') }}" required>
+                        <input type="date" name="tanggal_sk_pembimbing" class="form-control" value="<?php echo e(date('Y-m-d')); ?>" required>
                     </div>
                     <button type="submit" class="btn btn-success">Tetapkan 2 Pembimbing (Cek Kuota)</button>
                 </form>
@@ -246,25 +247,25 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($pengajuans as $p)
-                        @foreach($p->logbooks as $log)
+                    <?php $__currentLoopData = $pengajuans; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $p): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <?php $__currentLoopData = $p->logbooks; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $log): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                         <tr>
-                            <td>{{ $p->mahasiswa->name }}</td>
-                            <td>{{ $log->dosen->name }}</td>
-                            <td><strong>{{ $log->tanggal_bimbingan }}</strong><br>{{ $log->materi_bimbingan }}</td>
+                            <td><?php echo e($p->mahasiswa->name); ?></td>
+                            <td><?php echo e($log->dosen->name); ?></td>
+                            <td><strong><?php echo e($log->tanggal_bimbingan); ?></strong><br><?php echo e($log->materi_bimbingan); ?></td>
                             <td>
-                                @if($log->status_approval === 'approved')
+                                <?php if($log->status_approval === 'approved'): ?>
                                     <span class="badge badge-green">Approved (QR Verified)</span>
-                                @else
-                                    <form action="{{ route('logbook.approve', $log->id) }}" method="POST" style="display:inline;">
-                                        @csrf
+                                <?php else: ?>
+                                    <form action="<?php echo e(route('logbook.approve', $log->id)); ?>" method="POST" style="display:inline;">
+                                        <?php echo csrf_field(); ?>
                                         <button type="submit" class="btn btn-sm btn-primary">ACC Dosen</button>
                                     </form>
-                                @endif
+                                <?php endif; ?>
                             </td>
                         </tr>
-                        @endforeach
-                    @endforeach
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </tbody>
             </table>
         </div>
@@ -283,24 +284,24 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($pengajuans as $p)
+                    <?php $__currentLoopData = $pengajuans; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $p): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                     <tr>
-                        <td><strong>{{ $p->mahasiswa->name }}</strong><br>{{ $p->mahasiswa->identifier }}</td>
-                        <td><span class="badge badge-blue">{{ $p->status_tahap }}</span></td>
+                        <td><strong><?php echo e($p->mahasiswa->name); ?></strong><br><?php echo e($p->mahasiswa->identifier); ?></td>
+                        <td><span class="badge badge-blue"><?php echo e($p->status_tahap); ?></span></td>
                         <td>
-                            @if($p->status_tahap === 'tahap_1_bimbingan')
-                                <form action="{{ route('sempro.store', $p->id) }}" method="POST" style="display:flex; gap:8px; align-items:center;">
-                                    @csrf
-                                    <input type="date" name="jadwal_usulan_sidang" class="form-control" style="width:160px;" required value="{{ date('Y-m-d', strtotime('+15 days')) }}">
-                                    <input type="hidden" name="naskah_proposal_url" value="/docs/proposal_{{ $p->mahasiswa->identifier }}.pdf">
+                            <?php if($p->status_tahap === 'tahap_1_bimbingan'): ?>
+                                <form action="<?php echo e(route('sempro.store', $p->id)); ?>" method="POST" style="display:flex; gap:8px; align-items:center;">
+                                    <?php echo csrf_field(); ?>
+                                    <input type="date" name="jadwal_usulan_sidang" class="form-control" style="width:160px;" required value="<?php echo e(date('Y-m-d', strtotime('+15 days'))); ?>">
+                                    <input type="hidden" name="naskah_proposal_url" value="/docs/proposal_<?php echo e($p->mahasiswa->identifier); ?>.pdf">
                                     <input type="hidden" name="bukti_spp_url" value="/docs/spp.pdf">
                                     <input type="hidden" name="khs_url" value="/docs/khs.pdf">
                                     <button type="submit" class="btn btn-sm btn-primary">Daftar Sempro (FR-03)</button>
                                 </form>
-                            @elseif($p->status_tahap === 'tahap_2_sempro')
-                                <form action="{{ route('semhas.store', $p->id) }}" method="POST" style="display:flex; gap:8px; align-items:center;">
-                                    @csrf
-                                    <input type="date" name="jadwal_usulan_sidang" class="form-control" style="width:160px;" required value="{{ date('Y-m-d', strtotime('+15 days')) }}">
+                            <?php elseif($p->status_tahap === 'tahap_2_sempro'): ?>
+                                <form action="<?php echo e(route('semhas.store', $p->id)); ?>" method="POST" style="display:flex; gap:8px; align-items:center;">
+                                    <?php echo csrf_field(); ?>
+                                    <input type="date" name="jadwal_usulan_sidang" class="form-control" style="width:160px;" required value="<?php echo e(date('Y-m-d', strtotime('+15 days'))); ?>">
                                     <input type="hidden" name="naskah_bab_1_5_url" value="/docs/bab1_5.pdf">
                                     <input type="hidden" name="draf_artikel_ilmiah_urls[]" value="/docs/art1.pdf">
                                     <input type="hidden" name="draf_artikel_ilmiah_urls[]" value="/docs/art2.pdf">
@@ -308,10 +309,10 @@
                                     <input type="hidden" name="bukti_spp_url" value="/docs/spp.pdf">
                                     <button type="submit" class="btn btn-sm btn-primary">Daftar Semhas (FR-05)</button>
                                 </form>
-                            @elseif($p->status_tahap === 'tahap_3_semhas')
-                                <form action="{{ route('ujian.store', $p->id) }}" method="POST" style="display:flex; gap:8px; align-items:center;">
-                                    @csrf
-                                    <input type="date" name="jadwal_usulan_sidang" class="form-control" style="width:160px;" required value="{{ date('Y-m-d', strtotime('+15 days')) }}">
+                            <?php elseif($p->status_tahap === 'tahap_3_semhas'): ?>
+                                <form action="<?php echo e(route('ujian.store', $p->id)); ?>" method="POST" style="display:flex; gap:8px; align-items:center;">
+                                    <?php echo csrf_field(); ?>
+                                    <input type="date" name="jadwal_usulan_sidang" class="form-control" style="width:160px;" required value="<?php echo e(date('Y-m-d', strtotime('+15 days'))); ?>">
                                     <input type="hidden" name="naskah_tesis_lengkap_url" value="/docs/tesis.pdf">
                                     <input type="hidden" name="artikel_jurnal_url" value="/docs/jurnal.pdf">
                                     <input type="hidden" name="prosiding_seminar_url" value="/docs/prosiding.pdf">
@@ -323,12 +324,12 @@
                                     <input type="hidden" name="similarity_score" value="18.5">
                                     <button type="submit" class="btn btn-sm btn-success">Daftar Ujian Tesis (FR-07)</button>
                                 </form>
-                            @else
+                            <?php else: ?>
                                 <span style="color:#166534; font-size:12px;">Pendaftaran Sidang Selesai</span>
-                            @endif
+                            <?php endif; ?>
                         </td>
                     </tr>
-                    @endforeach
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </tbody>
             </table>
         </div>
@@ -348,20 +349,20 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($sidangs as $s)
+                    <?php $__empty_1 = true; $__currentLoopData = $sidangs; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $s): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                     <tr>
-                        <td><strong>{{ strtoupper($s->tahap_sidang) }}</strong></td>
-                        <td>{{ $s->pengajuanTesis->mahasiswa->name ?? '-' }}</td>
-                        <td>{{ $s->waktu_mulai }} s.d {{ $s->waktu_selesai }}<br><small>Ruang: {{ $s->ruangan ?? 'Zoom Cloud' }}</small></td>
+                        <td><strong><?php echo e(strtoupper($s->tahap_sidang)); ?></strong></td>
+                        <td><?php echo e($s->pengajuanTesis->mahasiswa->name ?? '-'); ?></td>
+                        <td><?php echo e($s->waktu_mulai); ?> s.d <?php echo e($s->waktu_selesai); ?><br><small>Ruang: <?php echo e($s->ruangan ?? 'Zoom Cloud'); ?></small></td>
                         <td>
-                            @foreach($s->pengujiSidangs as $ps)
-                                • {{ $ps->dosen->name }} (<em>{{ $ps->peran_penguji }}</em>)<br>
-                            @endforeach
+                            <?php $__currentLoopData = $s->pengujiSidangs; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $ps): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                • <?php echo e($ps->dosen->name); ?> (<em><?php echo e($ps->peran_penguji); ?></em>)<br>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </td>
                     </tr>
-                    @empty
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                     <tr><td colspan="4" style="text-align: center; color: #64748b;">Belum ada plotting jadwal sidang yang aktif.</td></tr>
-                    @endforelse
+                    <?php endif; ?>
                 </tbody>
             </table>
         </div>
@@ -381,16 +382,16 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($sidangs as $s)
-                        @foreach($s->pengujiSidangs as $ps)
+                    <?php $__currentLoopData = $sidangs; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $s): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <?php $__currentLoopData = $s->pengujiSidangs; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $ps): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                         <tr>
-                            <td>{{ strtoupper($s->tahap_sidang) }} - {{ $s->pengajuanTesis->mahasiswa->name }}</td>
-                            <td>{{ $ps->dosen->name }}</td>
-                            <td>Total Angka: <strong>{{ $ps->nilai_total_angka ?? 'Belum Dinilai' }}</strong></td>
+                            <td><?php echo e(strtoupper($s->tahap_sidang)); ?> - <?php echo e($s->pengajuanTesis->mahasiswa->name); ?></td>
+                            <td><?php echo e($ps->dosen->name); ?></td>
+                            <td>Total Angka: <strong><?php echo e($ps->nilai_total_angka ?? 'Belum Dinilai'); ?></strong></td>
                             <td>
-                                <form action="{{ route('sidang.submitNilai', $s->id) }}" method="POST" style="display:flex; gap:6px;">
-                                    @csrf
-                                    <input type="hidden" name="dosen_id" value="{{ $ps->dosen_id }}">
+                                <form action="<?php echo e(route('sidang.submitNilai', $s->id)); ?>" method="POST" style="display:flex; gap:6px;">
+                                    <?php echo csrf_field(); ?>
+                                    <input type="hidden" name="dosen_id" value="<?php echo e($ps->dosen_id); ?>">
                                     <input type="number" name="nilai_dimensi_1_naskah" value="85" style="width:50px;" class="form-control">
                                     <input type="number" name="nilai_dimensi_2_publikasi" value="85" style="width:50px;" class="form-control">
                                     <input type="number" name="nilai_dimensi_3_presentasi" value="85" style="width:50px;" class="form-control">
@@ -399,8 +400,8 @@
                                 </form>
                             </td>
                         </tr>
-                        @endforeach
-                    @endforeach
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </tbody>
             </table>
         </div>
@@ -430,3 +431,4 @@
     </script>
 </body>
 </html>
+<?php /**PATH /home/speakver/pgv.speakverse.id/resources/views/dashboard.blade.php ENDPATH**/ ?>
