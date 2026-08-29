@@ -31,6 +31,9 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::prefix('pengajuan')->name('pengajuan.')->group(function () {
     Route::get('/', [PengajuanTesisController::class, 'index'])->name('index');
     Route::post('/store', [PengajuanTesisController::class, 'store'])->name('store');
+    Route::get('/{id}/edit', [PengajuanTesisController::class, 'edit'])->name('edit');
+    Route::put('/{id}', [PengajuanTesisController::class, 'update'])->name('update');
+    Route::delete('/{id}', [PengajuanTesisController::class, 'destroy'])->name('destroy');
     Route::post('/{id}/alokasi-pembimbing', [PengajuanTesisController::class, 'alokasiPembimbing'])->name('alokasi');
 });
 
