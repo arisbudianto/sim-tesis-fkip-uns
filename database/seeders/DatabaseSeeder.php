@@ -75,5 +75,52 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('password'),
             'role' => 'admin_prodi'
         ]);
+
+        // 7-10. Dewan Penguji — dosen tambahan di luar Pembimbing 1 & 2,
+        // dipakai untuk mengisi peran ketua_penguji, sekretaris_penguji,
+        // penguji_studi, penguji_pendidikan di tabel penguji_sidangs.
+        User::create([
+            'id' => Str::uuid(),
+            'name' => 'Prof. Dr. Bambang Kusumo, M.Pd.',
+            'identifier' => '196502101990031004',
+            'email' => 'ketua.penguji@fkip.uns.ac.id',
+            'password' => Hash::make('password'),
+            'role' => 'dosen',
+            'bidang_keahlian' => 'pendidikan',
+            'kuota_bimbingan_maks' => 8
+        ]);
+
+        User::create([
+            'id' => Str::uuid(),
+            'name' => 'Dr. Ratna Puspitasari, S.Pd., M.T.',
+            'identifier' => '197711052003122001',
+            'email' => 'sekretaris.penguji@fkip.uns.ac.id',
+            'password' => Hash::make('password'),
+            'role' => 'dosen',
+            'bidang_keahlian' => 'studi',
+            'kuota_bimbingan_maks' => 8
+        ]);
+
+        User::create([
+            'id' => Str::uuid(),
+            'name' => 'Dr. Agus Setiabudi, M.T.',
+            'identifier' => '197203201999031002',
+            'email' => 'penguji.studi@fkip.uns.ac.id',
+            'password' => Hash::make('password'),
+            'role' => 'dosen',
+            'bidang_keahlian' => 'studi',
+            'kuota_bimbingan_maks' => 8
+        ]);
+
+        User::create([
+            'id' => Str::uuid(),
+            'name' => 'Dr. Wulan Handayani, M.Pd.',
+            'identifier' => '198106252006042001',
+            'email' => 'penguji.pendidikan@fkip.uns.ac.id',
+            'password' => Hash::make('password'),
+            'role' => 'dosen',
+            'bidang_keahlian' => 'pendidikan',
+            'kuota_bimbingan_maks' => 8
+        ]);
     }
 }
