@@ -12,8 +12,20 @@ use App\Http\Controllers\RevisiDokumenController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DokumenCetakController;
 use App\Http\Controllers\VerifikasiDokumenController;
+use App\Http\Controllers\AuthController;
 
 Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+
+// Halaman publik (tanpa login) & panduan SOP 4-tahap
+Route::get('/beranda', [DashboardController::class, 'publicPage'])->name('public.index');
+Route::get('/panduan', [DashboardController::class, 'panduan'])->name('public.panduan');
+
+// Autentikasi
+Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+Route::post('/login', [AuthController::class, 'login'])->name('login.post');
+Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
+Route::post('/register', [AuthController::class, 'register'])->name('register.post');
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // FR-01: Pengajuan Judul & Penetapan Pembimbing
 Route::prefix('pengajuan')->name('pengajuan.')->group(function () {
