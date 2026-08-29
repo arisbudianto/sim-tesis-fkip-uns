@@ -380,45 +380,69 @@
                         <td><strong>{{ $p->mahasiswa->name }}</strong><br>{{ $p->mahasiswa->identifier }}</td>
                         <td><span class="badge badge-blue">{{ $p->status_tahap }}</span></td>
                         <td>
-                            @if($p->status_tahap === 'tahap_1_bimbingan')
-                                @if($p->pembimbing_1_id && $p->pembimbing_2_id)
-                                    <a href="{{ route('sempro.create', $p->id) }}" class="btn btn-sm btn-primary">Daftar Sempro (FR-03) &ndash; Unggah FPT-TI-01</a>
+                            @if(Auth::check() && Auth::user()->id === $p->mahasiswa_id)
+                                @if($p->status_tahap === 'tahap_1_bimbingan')
+                                    @if($p->pembimbing_1_id && $p->pembimbing_2_id)
+                                        <a href="{{ route('sempro.create', $p->id) }}" class="btn btn-sm btn-primary">Daftar Sempro (FR-03) &ndash; Unggah FPT-TI-01</a>
+                                    @else
+                                        <span style="color:#94a3b8; font-size:12px;">Menunggu Pembimbing 1 & 2 ditetapkan Komisi Tesis</span>
+                                    @endif
+                                @elseif($p->status_tahap === 'tahap_2_sempro' && $p->pendaftaranSempro?->status_verifikasi_admin === 'rejected')
+                                    <div>
+                                        <div style="color:#dc2626; font-size:12px; margin-bottom:6px;">Pendaftaran Sempro sebelumnya ditolak Admin/Komisi Tesis.</div>
+                                        <a href="{{ route('sempro.create', $p->id) }}" class="btn btn-sm btn-primary">Daftar Ulang Sempro &ndash; Unggah FPT-TI-01</a>
+                                    </div>
+                                @elseif($p->status_tahap === 'tahap_2_sempro')
+                                    <span style="color:#94a3b8; font-size:12px;">Sedang menjalani Seminar Proposal &mdash; menunggu sidang, rekap nilai, revisi &amp; pengesahan Kaprodi selesai</span>
+                                @elseif($p->status_tahap === 'tahap_3_semhas' && !$p->pendaftaranSemhas)
+                                    <a href="{{ route('semhas.create', $p->id) }}" class="btn btn-sm btn-primary">Daftar Semhas (FR-05) &ndash; Unggah Permohonan Seminar Hasil</a>
+                                @elseif($p->status_tahap === 'tahap_3_semhas' && $p->pendaftaranSemhas?->status_verifikasi_admin === 'rejected')
+                                    <div>
+                                        <div style="color:#dc2626; font-size:12px; margin-bottom:6px;">Pendaftaran Semhas sebelumnya ditolak Admin/Komisi Tesis.</div>
+                                        <a href="{{ route('semhas.create', $p->id) }}" class="btn btn-sm btn-primary">Daftar Ulang Semhas</a>
+                                    </div>
+                                @elseif($p->status_tahap === 'tahap_3_semhas')
+                                    <span style="color:#94a3b8; font-size:12px;">Sedang menjalani Seminar Hasil &mdash; menunggu sidang, rekap nilai, revisi &amp; pengesahan Kaprodi selesai</span>
+                                @elseif($p->status_tahap === 'tahap_4_ujian')
+                                    <form action="{{ route('ujian.store', $p->id) }}" method="POST" style="display:flex; gap:8px; align-items:center;">
+                                        @csrf
+                                        <input type="date" name="jadwal_usulan_sidang" class="form-control" style="width:160px;" required value="{{ date('Y-m-d', strtotime('+15 days')) }}">
+                                        <input type="hidden" name="naskah_tesis_lengkap_url" value="/docs/tesis.pdf">
+                                        <input type="hidden" name="artikel_jurnal_url" value="/docs/jurnal.pdf">
+                                        <input type="hidden" name="prosiding_seminar_url" value="/docs/prosiding.pdf">
+                                        <input type="hidden" name="sertifikat_bahasa_url" value="/docs/toefl.pdf">
+                                        <input type="hidden" name="skor_bahasa" value="500">
+                                        <input type="hidden" name="bukti_spp_terakhir_url" value="/docs/spp.pdf">
+                                        <input type="hidden" name="khs_kumulatif_url" value="/docs/khs.pdf">
+                                        <input type="hidden" name="surat_bebas_plagiasi_url" value="/docs/turnitin.pdf">
+                                        <input type="hidden" name="similarity_score" value="18.5">
+                                        <button type="submit" class="btn btn-sm btn-success">Daftar Ujian Tesis (FR-07)</button>
+                                    </form>
                                 @else
-                                    <span style="color:#94a3b8; font-size:12px;">Menunggu Pembimbing 1 & 2 ditetapkan Komisi Tesis</span>
+                                    <span style="color:#166534; font-size:12px;">Pendaftaran Sidang Selesai</span>
                                 @endif
-                            @elseif($p->status_tahap === 'tahap_2_sempro' && $p->pendaftaranSempro?->status_verifikasi_admin === 'rejected')
-                                <div>
-                                    <div style="color:#dc2626; font-size:12px; margin-bottom:6px;">Pendaftaran Sempro sebelumnya ditolak Admin/Komisi Tesis.</div>
-                                    <a href="{{ route('sempro.create', $p->id) }}" class="btn btn-sm btn-primary">Daftar Ulang Sempro &ndash; Unggah FPT-TI-01</a>
-                                </div>
-                            @elseif($p->status_tahap === 'tahap_2_sempro')
-                                <span style="color:#94a3b8; font-size:12px;">Sedang menjalani Seminar Proposal &mdash; menunggu sidang, rekap nilai, revisi &amp; pengesahan Kaprodi selesai</span>
-                            @elseif($p->status_tahap === 'tahap_3_semhas' && !$p->pendaftaranSemhas)
-                                <a href="{{ route('semhas.create', $p->id) }}" class="btn btn-sm btn-primary">Daftar Semhas (FR-05) &ndash; Unggah Permohonan Seminar Hasil</a>
-                            @elseif($p->status_tahap === 'tahap_3_semhas' && $p->pendaftaranSemhas?->status_verifikasi_admin === 'rejected')
-                                <div>
-                                    <div style="color:#dc2626; font-size:12px; margin-bottom:6px;">Pendaftaran Semhas sebelumnya ditolak Admin/Komisi Tesis.</div>
-                                    <a href="{{ route('semhas.create', $p->id) }}" class="btn btn-sm btn-primary">Daftar Ulang Semhas</a>
-                                </div>
-                            @elseif($p->status_tahap === 'tahap_3_semhas')
-                                <span style="color:#94a3b8; font-size:12px;">Sedang menjalani Seminar Hasil &mdash; menunggu sidang, rekap nilai, revisi &amp; pengesahan Kaprodi selesai</span>
-                            @elseif($p->status_tahap === 'tahap_4_ujian')
-                                <form action="{{ route('ujian.store', $p->id) }}" method="POST" style="display:flex; gap:8px; align-items:center;">
-                                    @csrf
-                                    <input type="date" name="jadwal_usulan_sidang" class="form-control" style="width:160px;" required value="{{ date('Y-m-d', strtotime('+15 days')) }}">
-                                    <input type="hidden" name="naskah_tesis_lengkap_url" value="/docs/tesis.pdf">
-                                    <input type="hidden" name="artikel_jurnal_url" value="/docs/jurnal.pdf">
-                                    <input type="hidden" name="prosiding_seminar_url" value="/docs/prosiding.pdf">
-                                    <input type="hidden" name="sertifikat_bahasa_url" value="/docs/toefl.pdf">
-                                    <input type="hidden" name="skor_bahasa" value="500">
-                                    <input type="hidden" name="bukti_spp_terakhir_url" value="/docs/spp.pdf">
-                                    <input type="hidden" name="khs_kumulatif_url" value="/docs/khs.pdf">
-                                    <input type="hidden" name="surat_bebas_plagiasi_url" value="/docs/turnitin.pdf">
-                                    <input type="hidden" name="similarity_score" value="18.5">
-                                    <button type="submit" class="btn btn-sm btn-success">Daftar Ujian Tesis (FR-07)</button>
-                                </form>
                             @else
-                                <span style="color:#166534; font-size:12px;">Pendaftaran Sidang Selesai</span>
+                                {{-- Selain mahasiswa yang bersangkutan (dosen/komisi tesis/kaprodi/admin
+                                     prodi), tombol pendaftaran disembunyikan — pendaftaran sidang murni
+                                     tindakan mahasiswa sendiri, admin cuma memverifikasi (lihat tabel
+                                     Verifikasi di bawah). --}}
+                                @if($p->status_tahap === 'tahap_1_bimbingan')
+                                    <span style="color:#94a3b8; font-size:12px;">Menunggu mahasiswa mendaftar Sempro</span>
+                                @elseif($p->status_tahap === 'tahap_2_sempro' && $p->pendaftaranSempro?->status_verifikasi_admin === 'rejected')
+                                    <span style="color:#94a3b8; font-size:12px;">Menunggu mahasiswa mendaftar ulang Sempro (ditolak sebelumnya)</span>
+                                @elseif($p->status_tahap === 'tahap_2_sempro')
+                                    <span style="color:#94a3b8; font-size:12px;">Sedang menjalani Seminar Proposal</span>
+                                @elseif($p->status_tahap === 'tahap_3_semhas' && !$p->pendaftaranSemhas)
+                                    <span style="color:#94a3b8; font-size:12px;">Menunggu mahasiswa mendaftar Semhas</span>
+                                @elseif($p->status_tahap === 'tahap_3_semhas' && $p->pendaftaranSemhas?->status_verifikasi_admin === 'rejected')
+                                    <span style="color:#94a3b8; font-size:12px;">Menunggu mahasiswa mendaftar ulang Semhas (ditolak sebelumnya)</span>
+                                @elseif($p->status_tahap === 'tahap_3_semhas')
+                                    <span style="color:#94a3b8; font-size:12px;">Sedang menjalani Seminar Hasil</span>
+                                @elseif($p->status_tahap === 'tahap_4_ujian')
+                                    <span style="color:#94a3b8; font-size:12px;">Menunggu mahasiswa mendaftar Ujian Tesis</span>
+                                @else
+                                    <span style="color:#166534; font-size:12px;">Pendaftaran Sidang Selesai</span>
+                                @endif
                             @endif
                         </td>
                     </tr>
