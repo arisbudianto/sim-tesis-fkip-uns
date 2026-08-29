@@ -291,10 +291,31 @@
             @else
             <div class="box">
                 <div class="box-title">Status Pembimbing 1 & 2</div>
-                <p style="color:#64748b; font-size:13.5px;">
-                    Penetapan Pembimbing 1 & 2 adalah wewenang Komisi Tesis / Kaprodi / Admin Program Studi.
-                    Anda hanya dapat melihat status pembimbing di tabel "Daftar Pengajuan Tesis Berjalan" pada tab Overview.
-                </p>
+                @forelse($pengajuans as $p)
+                    <div style="padding: 14px 0; border-bottom: 1px solid #f1f5f9;">
+                        <div style="font-size:13px; font-weight:700; color:#1e293b; margin-bottom:8px;">
+                            {{ $p->mahasiswa->name ?? '-' }} <span style="font-weight:400; color:#64748b;">({{ $p->mahasiswa->identifier ?? '-' }})</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; padding:6px 0; font-size:13.5px;">
+                            <span style="color:#64748b; font-weight:600;">Pembimbing 1</span>
+                            @if($p->pembimbing1)
+                                <span style="color:#166534; font-weight:600;">{{ $p->pembimbing1->name }}</span>
+                            @else
+                                <span class="badge badge-yellow">Belum Ditentukan</span>
+                            @endif
+                        </div>
+                        <div style="display:flex; justify-content:space-between; padding:6px 0; font-size:13.5px;">
+                            <span style="color:#64748b; font-weight:600;">Pembimbing 2</span>
+                            @if($p->pembimbing2)
+                                <span style="color:#166534; font-weight:600;">{{ $p->pembimbing2->name }}</span>
+                            @else
+                                <span class="badge badge-yellow">Belum Ditentukan</span>
+                            @endif
+                        </div>
+                    </div>
+                @empty
+                    <p style="color:#64748b; font-size:13.5px;">Belum ada data pengajuan tesis.</p>
+                @endforelse
             </div>
             @endif
         </div>
