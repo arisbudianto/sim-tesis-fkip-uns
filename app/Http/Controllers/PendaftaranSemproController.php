@@ -12,6 +12,25 @@ use Illuminate\Support\Facades\Storage;
 class PendaftaranSemproController extends Controller
 {
     /**
+     * Tampilkan form pendaftaran Seminar Proposal (Sempro).
+     * Halaman ini sebelumnya blank karena method create() belum pernah dibuat
+     * — routes/web.php sudah memanggilnya, tapi controller cuma punya store().
+     */
+    public function create($pengajuanId)
+    {
+        $tesis = PengajuanTesis::with(['mahasiswa', 'pembimbing1', 'pembimbing2', 'pendaftaranSempro'])
+            ->findOrFail($pengajuanId);
+
+        // Tampilkan alasan blokir (kalau ada) di halaman, bukan cuma saat submit,
+        // supaya mahasiswa tahu dari awal kenapa belum bisa mendaftar.
+        $blockReason = LifecycleStateMachine::canTransitionTo($tesis, 'tahap_2_sempro')
+            ? null
+            : 'Pendaftaran belum bisa dibuka: Alokasi 2 Pembimbing belum lengkap atau tahapan akademik Anda belum sesuai.';
+
+        return view('sempro.create', compact('tesis', 'blockReason'));
+    }
+
+    /**
      * FR-03: Pendaftaran Seminar Proposal (Sempro) H-14 & Unggah Dokumen FPT-TI-01 & 02
      */
     public function store(Request $request, $pengajuanId)
