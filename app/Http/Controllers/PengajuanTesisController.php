@@ -47,6 +47,16 @@ class PengajuanTesisController extends Controller
     }
 
     /**
+     * Role yang berwenang mengedit/menghapus pengajuan tesis setelah dibuat.
+     * Mahasiswa hanya boleh membuat pengajuan (store), tidak mengubah/menghapus
+     * data yang sudah tersimpan — itu wewenang Komisi Tesis/Kaprodi/Admin Prodi.
+     */
+    protected function bolehEditPengajuan(?User $user): bool
+    {
+        return $user && in_array($user->role, ['komisi_tesis', 'kaprodi', 'admin_prodi']);
+    }
+
+    /**
      * Form edit pengajuan tesis (hanya untuk data di tahap_1_bimbingan —
      * setelah masuk ke tahap sempro dst, judul/fokus dianggap final).
      */
@@ -55,9 +65,8 @@ class PengajuanTesisController extends Controller
         $pengajuan = PengajuanTesis::with(['mahasiswa', 'pembimbing1', 'pembimbing2'])->findOrFail($id);
 
         $user = $request->user();
-        // Mahasiswa hanya boleh membuka pengajuan miliknya sendiri.
-        if ($user && $user->role === 'mahasiswa' && $user->id !== $pengajuan->mahasiswa_id) {
-            abort(403, 'Anda hanya bisa mengedit pengajuan tesis milik sendiri.');
+        if (!$this->bolehEditPengajuan($user)) {
+            abort(403, 'Mahasiswa tidak dapat mengubah data pengajuan tesis. Hubungi Komisi Tesis / Admin Program Studi untuk perubahan.');
         }
 
         $dosens = User::where('role', 'dosen')->get();
@@ -71,8 +80,8 @@ class PengajuanTesisController extends Controller
         $pengajuan = PengajuanTesis::findOrFail($id);
 
         $user = $request->user();
-        if ($user && $user->role === 'mahasiswa' && $user->id !== $pengajuan->mahasiswa_id) {
-            abort(403, 'Anda hanya bisa mengedit pengajuan tesis milik sendiri.');
+        if (!$this->bolehEditPengajuan($user)) {
+            abort(403, 'Mahasiswa tidak dapat mengubah data pengajuan tesis. Hubungi Komisi Tesis / Admin Program Studi untuk perubahan.');
         }
 
         if ($pengajuan->status_tahap !== 'tahap_1_bimbingan') {
@@ -149,6 +158,13 @@ class PengajuanTesisController extends Controller
     public function destroy(Request $request, $id)
     {
         $pengajuan = PengajuanTesis::findOrFail($id);
+
+        if (!$this->bolehEditPengajuan($request->user())) {
+            $msg = 'Mahasiswa tidak dapat menghapus data pengajuan tesis. Hubungi Komisi Tesis / Admin Program Studi.';
+            return $request->wantsJson()
+                ? response()->json(['status' => 'error', 'message' => $msg], 403)
+                : back()->withErrors(['error' => $msg]);
+        }
 
         if ($pengajuan->status_tahap !== 'tahap_1_bimbingan') {
             $msg = 'Pengajuan tidak bisa dihapus karena sudah melewati Tahap 1 (Bimbingan) dan memiliki data lanjutan (sidang/nilai/revisi).';

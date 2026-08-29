@@ -154,15 +154,19 @@
                             @endif
                         </td>
                         <td>
-                            @if($p->status_tahap === 'tahap_1_bimbingan')
-                                <a href="{{ route('pengajuan.edit', $p->id) }}" class="btn btn-sm btn-primary">Edit</a>
-                                <form action="{{ route('pengajuan.destroy', $p->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Yakin hapus pengajuan tesis {{ $p->mahasiswa->name ?? '' }}? Tindakan ini tidak bisa dibatalkan.');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-danger">Hapus</button>
-                                </form>
+                            @if(Auth::check() && in_array(Auth::user()->role, ['komisi_tesis', 'kaprodi', 'admin_prodi']))
+                                @if($p->status_tahap === 'tahap_1_bimbingan')
+                                    <a href="{{ route('pengajuan.edit', $p->id) }}" class="btn btn-sm btn-primary">Edit</a>
+                                    <form action="{{ route('pengajuan.destroy', $p->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Yakin hapus pengajuan tesis {{ $p->mahasiswa->name ?? '' }}? Tindakan ini tidak bisa dibatalkan.');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-danger">Hapus</button>
+                                    </form>
+                                @else
+                                    <span style="color:#94a3b8; font-size:12px;">Terkunci (&gt; Tahap 1)</span>
+                                @endif
                             @else
-                                <span style="color:#94a3b8; font-size:12px;">Terkunci (&gt; Tahap 1)</span>
+                                <span style="color:#94a3b8; font-size:12px;">&mdash;</span>
                             @endif
                         </td>
                     </tr>
