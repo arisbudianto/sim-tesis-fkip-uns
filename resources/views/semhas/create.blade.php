@@ -63,7 +63,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="form_fpt_sh_01">Form FPT-SH-01: Permohonan Seminar Hasil &ndash; sudah ditandatangani Pembimbing 1 & 2 (PDF, maks. 1MB) <span style="color:#dc2626">*</span></label>
+                    <label for="form_fpt_sh_01">Permohonan Seminar Hasil Riset dan Karya Publikasi &ndash; sudah ditandatangani Pembimbing Utama (PDF, maks. 1MB) <span style="color:#dc2626">*</span></label>
                     <input type="file" id="form_fpt_sh_01" name="form_fpt_sh_01" class="form-control" accept=".pdf" required>
                     <div class="hint">Berkas ini yang akan ditinjau Admin Prodi/Komisi Tesis/Kaprodi sebelum menyetujui pendaftaran Anda.</div>
                 </div>

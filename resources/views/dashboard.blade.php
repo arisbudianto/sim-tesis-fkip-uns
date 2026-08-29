@@ -381,10 +381,18 @@
                         <td><span class="badge badge-blue">{{ $p->status_tahap }}</span></td>
                         <td>
                             @if($p->status_tahap === 'tahap_1_bimbingan')
-                                <a href="{{ route('sempro.create', $p->id) }}" class="btn btn-sm btn-primary">Daftar Sempro (FR-03) &ndash; Unggah FPT-TI-01</a>
+                                @if($p->pembimbing_1_id && $p->pembimbing_2_id)
+                                    <a href="{{ route('sempro.create', $p->id) }}" class="btn btn-sm btn-primary">Daftar Sempro (FR-03) &ndash; Unggah FPT-TI-01</a>
+                                @else
+                                    <span style="color:#94a3b8; font-size:12px;">Menunggu Pembimbing 1 & 2 ditetapkan Komisi Tesis</span>
+                                @endif
                             @elseif($p->status_tahap === 'tahap_2_sempro')
-                                <a href="{{ route('semhas.create', $p->id) }}" class="btn btn-sm btn-primary">Daftar Semhas (FR-05) &ndash; Unggah FPT-SH-01</a>
+                                <span style="color:#94a3b8; font-size:12px;">Sedang menjalani Seminar Proposal &mdash; menunggu sidang, rekap nilai, revisi &amp; pengesahan Kaprodi selesai</span>
+                            @elseif($p->status_tahap === 'tahap_3_semhas' && !$p->pendaftaranSemhas)
+                                <a href="{{ route('semhas.create', $p->id) }}" class="btn btn-sm btn-primary">Daftar Semhas (FR-05) &ndash; Unggah Permohonan Seminar Hasil</a>
                             @elseif($p->status_tahap === 'tahap_3_semhas')
+                                <span style="color:#94a3b8; font-size:12px;">Sedang menjalani Seminar Hasil &mdash; menunggu sidang, rekap nilai, revisi &amp; pengesahan Kaprodi selesai</span>
+                            @elseif($p->status_tahap === 'tahap_4_ujian')
                                 <form action="{{ route('ujian.store', $p->id) }}" method="POST" style="display:flex; gap:8px; align-items:center;">
                                     @csrf
                                     <input type="date" name="jadwal_usulan_sidang" class="form-control" style="width:160px;" required value="{{ date('Y-m-d', strtotime('+15 days')) }}">
@@ -523,13 +531,13 @@
         @if(Auth::check() && in_array(Auth::user()->role, ['komisi_tesis', 'kaprodi', 'admin_prodi']))
         <div class="box">
             <div class="box-title">Verifikasi Pendaftaran Semhas</div>
-            <p style="color:#64748b; font-size:13.5px;">Setujui atau tolak pendaftaran Seminar Hasil sebelum Form Permohonan (FPT-SH-01) bisa diunduh mahasiswa.</p>
+            <p style="color:#64748b; font-size:13.5px;">Setujui atau tolak pendaftaran Seminar Hasil sebelum Permohonan Seminar Hasil Riset dan Karya Publikasi bisa diunduh mahasiswa.</p>
             <table>
                 <thead>
                     <tr>
                         <th>Mahasiswa</th>
                         <th>Jadwal Usulan</th>
-                        <th>Form FPT-SH-01</th>
+                        <th>Permohonan Semhas</th>
                         <th>Status Verifikasi</th>
                         <th>Aksi</th>
                     </tr>
@@ -588,7 +596,7 @@
                 <thead>
                     <tr>
                         <th>Mahasiswa</th>
-                        <th>Form Permohonan (FPT-SH-01)</th>
+                        <th>Permohonan Seminar Hasil Riset dan Karya Publikasi</th>
                     </tr>
                 </thead>
                 <tbody>
