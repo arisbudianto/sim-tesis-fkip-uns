@@ -12,6 +12,25 @@ use Illuminate\Support\Facades\Storage;
 class PendaftaranSemproController extends Controller
 {
     /**
+     * Boleh mendaftar/daftar-ulang Sempro kalau:
+     * 1. Memenuhi syarat transisi normal (tahap_1_bimbingan + 2 pembimbing), ATAU
+     * 2. Sudah pernah mendaftar (status_tahap sudah tahap_2_sempro) TAPI
+     *    pendaftaran sebelumnya DITOLAK — supaya mahasiswa tidak terjebak
+     *    tidak bisa mendaftar ulang hanya karena status_tahap sudah terlanjur
+     *    berpindah saat submit pertama (terlepas dari hasil verifikasinya).
+     */
+    protected function bolehDaftarSempro(PengajuanTesis $tesis): bool
+    {
+        if (LifecycleStateMachine::canTransitionTo($tesis, 'tahap_2_sempro')) {
+            return true;
+        }
+
+        return $tesis->status_tahap === 'tahap_2_sempro'
+            && $tesis->pendaftaranSempro
+            && $tesis->pendaftaranSempro->status_verifikasi_admin === 'rejected';
+    }
+
+    /**
      * Tampilkan form pendaftaran Seminar Proposal (Sempro).
      * Halaman ini sebelumnya blank karena method create() belum pernah dibuat
      * — routes/web.php sudah memanggilnya, tapi controller cuma punya store().
@@ -23,7 +42,7 @@ class PendaftaranSemproController extends Controller
 
         // Tampilkan alasan blokir (kalau ada) di halaman, bukan cuma saat submit,
         // supaya mahasiswa tahu dari awal kenapa belum bisa mendaftar.
-        $blockReason = LifecycleStateMachine::canTransitionTo($tesis, 'tahap_2_sempro')
+        $blockReason = $this->bolehDaftarSempro($tesis)
             ? null
             : 'Pendaftaran belum bisa dibuka: Alokasi 2 Pembimbing belum lengkap atau tahapan akademik Anda belum sesuai.';
 
@@ -35,10 +54,11 @@ class PendaftaranSemproController extends Controller
      */
     public function store(Request $request, $pengajuanId)
     {
-        $tesis = PengajuanTesis::findOrFail($pengajuanId);
+        $tesis = PengajuanTesis::with('pendaftaranSempro')->findOrFail($pengajuanId);
 
-        // 1. Verifikasi Lifecycle State Machine
-        if (!LifecycleStateMachine::canTransitionTo($tesis, 'tahap_2_sempro')) {
+        // 1. Verifikasi Lifecycle State Machine (termasuk izin daftar-ulang
+        //    kalau pendaftaran sebelumnya ditolak)
+        if (!$this->bolehDaftarSempro($tesis)) {
             $msg = 'Pendaftaran ditolak: Alokasi 2 Pembimbing belum lengkap atau tahapan tidak sesuai.';
             return $request->wantsJson() 
                 ? response()->json(['status' => 'error', 'message' => $msg], 422)

@@ -386,10 +386,20 @@
                                 @else
                                     <span style="color:#94a3b8; font-size:12px;">Menunggu Pembimbing 1 & 2 ditetapkan Komisi Tesis</span>
                                 @endif
+                            @elseif($p->status_tahap === 'tahap_2_sempro' && $p->pendaftaranSempro?->status_verifikasi_admin === 'rejected')
+                                <div>
+                                    <div style="color:#dc2626; font-size:12px; margin-bottom:6px;">Pendaftaran Sempro sebelumnya ditolak Admin/Komisi Tesis.</div>
+                                    <a href="{{ route('sempro.create', $p->id) }}" class="btn btn-sm btn-primary">Daftar Ulang Sempro &ndash; Unggah FPT-TI-01</a>
+                                </div>
                             @elseif($p->status_tahap === 'tahap_2_sempro')
                                 <span style="color:#94a3b8; font-size:12px;">Sedang menjalani Seminar Proposal &mdash; menunggu sidang, rekap nilai, revisi &amp; pengesahan Kaprodi selesai</span>
                             @elseif($p->status_tahap === 'tahap_3_semhas' && !$p->pendaftaranSemhas)
                                 <a href="{{ route('semhas.create', $p->id) }}" class="btn btn-sm btn-primary">Daftar Semhas (FR-05) &ndash; Unggah Permohonan Seminar Hasil</a>
+                            @elseif($p->status_tahap === 'tahap_3_semhas' && $p->pendaftaranSemhas?->status_verifikasi_admin === 'rejected')
+                                <div>
+                                    <div style="color:#dc2626; font-size:12px; margin-bottom:6px;">Pendaftaran Semhas sebelumnya ditolak Admin/Komisi Tesis.</div>
+                                    <a href="{{ route('semhas.create', $p->id) }}" class="btn btn-sm btn-primary">Daftar Ulang Semhas</a>
+                                </div>
                             @elseif($p->status_tahap === 'tahap_3_semhas')
                                 <span style="color:#94a3b8; font-size:12px;">Sedang menjalani Seminar Hasil &mdash; menunggu sidang, rekap nilai, revisi &amp; pengesahan Kaprodi selesai</span>
                             @elseif($p->status_tahap === 'tahap_4_ujian')
@@ -433,7 +443,7 @@
                 </thead>
                 <tbody>
                     @forelse($pengajuans as $p)
-                        @if($p->pendaftaranSempro)
+                        @if($p->pendaftaranSempro && $p->pendaftaranSempro->status_verifikasi_admin !== 'rejected')
                         <tr>
                             <td><strong>{{ $p->mahasiswa->name }}</strong><br>{{ $p->mahasiswa->identifier }}</td>
                             <td>{{ \Carbon\Carbon::parse($p->pendaftaranSempro->jadwal_usulan_sidang)->translatedFormat('d F Y, H:i') }}</td>
@@ -544,7 +554,7 @@
                 </thead>
                 <tbody>
                     @forelse($pengajuans as $p)
-                        @if($p->pendaftaranSemhas)
+                        @if($p->pendaftaranSemhas && $p->pendaftaranSemhas->status_verifikasi_admin !== 'rejected')
                         <tr>
                             <td><strong>{{ $p->mahasiswa->name }}</strong><br>{{ $p->mahasiswa->identifier }}</td>
                             <td>{{ \Carbon\Carbon::parse($p->pendaftaranSemhas->jadwal_usulan_sidang)->translatedFormat('d F Y, H:i') }}</td>
