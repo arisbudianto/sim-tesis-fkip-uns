@@ -14,7 +14,7 @@ class DatabaseSeeder extends Seeder
         // 1. Akun Mahasiswa
         User::create([
             'id' => Str::uuid(),
-            'name' => 'Budi Santoso (Mahasiswa)',
+            'name' => 'Budi Santoso',
             'identifier' => 'S032608001',
             'email' => 'mhs.budi@student.uns.ac.id',
             'password' => Hash::make('password'),

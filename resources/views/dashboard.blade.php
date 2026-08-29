@@ -201,6 +201,7 @@
                 </form>
             </div>
 
+            @if(Auth::check() && in_array(Auth::user()->role, ['komisi_tesis', 'kaprodi', 'admin_prodi']))
             <div class="box">
                 <div class="box-title">Komisi Tesis: Alokasi Pembimbing 1 & 2 (FR-01)</div>
 
@@ -283,6 +284,15 @@
                     <button type="submit" class="btn btn-success">Tetapkan 2 Pembimbing (Cek Kuota)</button>
                 </form>
             </div>
+            @else
+            <div class="box">
+                <div class="box-title">Status Pembimbing 1 & 2</div>
+                <p style="color:#64748b; font-size:13.5px;">
+                    Penetapan Pembimbing 1 & 2 adalah wewenang Komisi Tesis / Kaprodi / Admin Program Studi.
+                    Anda hanya dapat melihat status pembimbing di tabel "Daftar Pengajuan Tesis Berjalan" pada tab Overview.
+                </p>
+            </div>
+            @endif
         </div>
     </div>
 

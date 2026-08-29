@@ -168,6 +168,13 @@ class PengajuanTesisController extends Controller
 
     public function alokasiPembimbing(Request $request, $id)
     {
+        if (!$this->bolehAturPembimbing($request->user())) {
+            $msg = 'Anda tidak berwenang menetapkan pembimbing. Hanya Komisi Tesis, Kaprodi, atau Admin Program Studi yang bisa melakukan ini.';
+            return $request->wantsJson()
+                ? response()->json(['status' => 'error', 'message' => $msg], 403)
+                : back()->withErrors(['error' => $msg]);
+        }
+
         $validated = $request->validate([
             'pembimbing_1_id' => 'required|uuid|exists:users,id',
             'pembimbing_2_id' => 'required|uuid|exists:users,id|different:pembimbing_1_id',
