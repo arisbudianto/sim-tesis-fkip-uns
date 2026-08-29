@@ -28,12 +28,21 @@ class KomisiTesisController extends Controller
 
     private function createSidangWithPenguji(Request $request, string $pengajuanId, string $tahap)
     {
+        if (!$request->user() || !in_array($request->user()->role, ['komisi_tesis', 'kaprodi', 'admin_prodi'])) {
+            $msg = 'Anda tidak berwenang melakukan plotting jadwal & dewan penguji.';
+            return $request->wantsJson()
+                ? response()->json(['status' => 'error', 'message' => $msg], 403)
+                : back()->withErrors(['error' => $msg]);
+        }
+
         // GATE State Machine: Komisi Tesis tidak boleh menjadwalkan sidang
         // untuk tahap yang belum "terbuka" bagi mahasiswa tersebut (mis.
         // menjadwalkan Semhas padahal mahasiswa masih di tahap Sempro).
         $tesis = PengajuanTesis::findOrFail($pengajuanId);
         if ($blockReason = LifecycleStateMachine::blockReasonForSidang($tesis, $tahap)) {
-            return response()->json(['status' => 'error', 'message' => $blockReason], 422);
+            return $request->wantsJson()
+                ? response()->json(['status' => 'error', 'message' => $blockReason], 422)
+                : back()->withErrors(['error' => $blockReason]);
         }
 
         $validated = $request->validate([
@@ -57,7 +66,9 @@ class KomisiTesisController extends Controller
         );
 
         if (!empty($conflicts)) {
-            return response()->json(['status' => 'error', 'message' => 'Terjadi bentrok jadwal!', 'conflicts' => $conflicts], 422);
+            return $request->wantsJson()
+                ? response()->json(['status' => 'error', 'message' => 'Terjadi bentrok jadwal!', 'conflicts' => $conflicts], 422)
+                : back()->withErrors(['error' => 'Terjadi bentrok jadwal: ' . implode(' ', $conflicts)])->withInput();
         }
 
         $sidang = AktivitasSidang::create([
@@ -79,6 +90,10 @@ class KomisiTesisController extends Controller
             ]);
         }
 
-        return response()->json(['status' => 'success', 'message' => "Plotting jadwal & penguji {$tahap} berhasil.", 'data' => $sidang->load('pengujiSidangs')]);
+        if ($request->wantsJson()) {
+            return response()->json(['status' => 'success', 'message' => "Plotting jadwal & penguji {$tahap} berhasil.", 'data' => $sidang->load('pengujiSidangs')]);
+        }
+
+        return redirect()->route('dashboard')->with('success', "Plotting jadwal & dewan penguji {$tahap} berhasil disimpan.");
     }
 }

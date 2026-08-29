@@ -656,6 +656,126 @@
 
     <!-- TAB 5: Plotting Komisi Tesis -->
     <div id="tab-sidang" class="tab-content">
+        @if(Auth::check() && in_array(Auth::user()->role, ['komisi_tesis', 'kaprodi', 'admin_prodi']))
+        @php
+            $eligiblePlotting = [];
+            foreach ($pengajuans as $pe) {
+                if ($pe->status_tahap === 'tahap_2_sempro'
+                    && $pe->pendaftaranSempro?->status_verifikasi_admin === 'verified'
+                    && !$pe->aktivitasSidangs->firstWhere('tahap_sidang', 'sempro')) {
+                    $eligiblePlotting[] = ['pengajuan' => $pe, 'tahap' => 'sempro', 'label' => $pe->mahasiswa->name . ' — Sempro'];
+                }
+                if ($pe->status_tahap === 'tahap_3_semhas'
+                    && $pe->pendaftaranSemhas?->status_verifikasi_admin === 'verified'
+                    && !$pe->aktivitasSidangs->firstWhere('tahap_sidang', 'semhas')) {
+                    $eligiblePlotting[] = ['pengajuan' => $pe, 'tahap' => 'semhas', 'label' => $pe->mahasiswa->name . ' — Semhas'];
+                }
+            }
+        @endphp
+        <div class="box">
+            <div class="box-title">Plotting Jadwal &amp; Dewan Penguji Baru</div>
+            <p style="color:#64748b; font-size:13.5px;">Hanya menampilkan mahasiswa yang pendaftarannya sudah diverifikasi &amp; belum punya jadwal sidang untuk tahap tersebut. Dewan Penguji terdiri dari 4 dosen: Ketua Penguji, Sekretaris Penguji, Anggota 1, dan Anggota 2 (Anggota 1 &amp; 2 otomatis terisi Pembimbing 1 &amp; 2, tapi tetap bisa diganti kalau perlu).</p>
+
+            @if($errors->any())
+                <div style="background:#fef2f2; color:#b91c1c; border:1px solid #fecaca; padding:12px 14px; border-radius:8px; font-size:13.5px; margin-bottom:14px;">
+                    @foreach($errors->all() as $error) {{ $error }}<br> @endforeach
+                </div>
+            @endif
+
+            @if(count($eligiblePlotting) === 0)
+                <p style="color:#94a3b8; font-size:13.5px;">Belum ada pendaftaran yang siap diplotting saat ini.</p>
+            @else
+            <form id="form-plotting" method="POST">
+                @csrf
+                <div class="form-group">
+                    <label>Pilih Mahasiswa &amp; Tahap Sidang:</label>
+                    <select id="plotting-select" class="form-control" onchange="updatePlottingAction(this)">
+                        <option value="">-- Pilih --</option>
+                        @foreach($eligiblePlotting as $ep)
+                            <option value="{{ $ep['tahap'] }}"
+                                data-pengajuan-id="{{ $ep['pengajuan']->id }}"
+                                data-pembimbing1="{{ $ep['pengajuan']->pembimbing_1_id }}"
+                                data-pembimbing2="{{ $ep['pengajuan']->pembimbing_2_id }}">{{ $ep['label'] }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+                    <div class="form-group">
+                        <label>Waktu Mulai:</label>
+                        <input type="datetime-local" name="waktu_mulai" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Waktu Selesai:</label>
+                        <input type="datetime-local" name="waktu_selesai" class="form-control" required>
+                    </div>
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+                    <div class="form-group">
+                        <label>Ruangan (kosongkan kalau daring):</label>
+                        <input type="text" name="ruangan" class="form-control" placeholder="Ruang Sidang FKIP">
+                    </div>
+                    <div class="form-group">
+                        <label>Link Zoom (kalau daring):</label>
+                        <input type="text" name="link_zoom" class="form-control" placeholder="https://zoom.us/j/...">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Komisi Tesis Penanggung Jawab:</label>
+                    <select name="komisi_tesis_id" class="form-control" required>
+                        @foreach($dosens as $d)
+                            @if($d->role === 'komisi_tesis' || $d->is_komisi_tesis)
+                                <option value="{{ $d->id }}" {{ $komisi && $komisi->id === $d->id ? 'selected' : '' }}>{{ $d->name }}</option>
+                            @endif
+                        @endforeach
+                        @if($komisi && !$dosens->contains('id', $komisi->id))
+                            <option value="{{ $komisi->id }}" selected>{{ $komisi->name }}</option>
+                        @endif
+                    </select>
+                </div>
+
+                <div style="font-size:13px; font-weight:700; text-transform:uppercase; color:#64748b; margin:18px 0 12px 0; padding-bottom:6px; border-bottom:2px solid #f1f5f9;">Dewan Penguji &mdash; 4 Dosen</div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+                    <div class="form-group">
+                        <label>Ketua Penguji:</label>
+                        <select name="penguji[0][dosen_id]" class="form-control" required>
+                            <option value="">-- Pilih Dosen --</option>
+                            @foreach($dosens as $d)<option value="{{ $d->id }}">{{ $d->name }}</option>@endforeach
+                        </select>
+                        <input type="hidden" name="penguji[0][peran_penguji]" value="ketua_penguji">
+                    </div>
+                    <div class="form-group">
+                        <label>Sekretaris Penguji:</label>
+                        <select name="penguji[1][dosen_id]" class="form-control" required>
+                            <option value="">-- Pilih Dosen --</option>
+                            @foreach($dosens as $d)<option value="{{ $d->id }}">{{ $d->name }}</option>@endforeach
+                        </select>
+                        <input type="hidden" name="penguji[1][peran_penguji]" value="sekretaris_penguji">
+                    </div>
+                    <div class="form-group">
+                        <label>Anggota 1 (Pembimbing 1):</label>
+                        <select id="plotting-anggota1" name="penguji[2][dosen_id]" class="form-control" required>
+                            <option value="">-- Pilih Dosen --</option>
+                            @foreach($dosens as $d)<option value="{{ $d->id }}">{{ $d->name }}</option>@endforeach
+                        </select>
+                        <input type="hidden" name="penguji[2][peran_penguji]" value="pembimbing_1">
+                    </div>
+                    <div class="form-group">
+                        <label>Anggota 2 (Pembimbing 2):</label>
+                        <select id="plotting-anggota2" name="penguji[3][dosen_id]" class="form-control" required>
+                            <option value="">-- Pilih Dosen --</option>
+                            @foreach($dosens as $d)<option value="{{ $d->id }}">{{ $d->name }}</option>@endforeach
+                        </select>
+                        <input type="hidden" name="penguji[3][peran_penguji]" value="pembimbing_2">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-success">Simpan Plotting</button>
+            </form>
+            @endif
+        </div>
+        @endif
+
         <div class="box">
             <div class="box-title">Plotting Dewan Penguji & Deteksi Bentrok Jadwal (FR-04, FR-06, FR-08)</div>
             <table>
@@ -753,6 +873,30 @@
             select.value = pengajuanId;
             updateAlokasiAction(pengajuanId);
             document.getElementById('form-alokasi').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function updatePlottingAction(selectEl) {
+            const opt = selectEl.options[selectEl.selectedIndex];
+            const tahap = opt.value;
+            const pengajuanId = opt.getAttribute('data-pengajuan-id');
+            const pembimbing1 = opt.getAttribute('data-pembimbing1');
+            const pembimbing2 = opt.getAttribute('data-pembimbing2');
+
+            if (!tahap || !pengajuanId) return;
+
+            const routes = {
+                sempro: '/sempro/plotting-jadwal/',
+                semhas: '/semhas/plotting-jadwal/',
+                ujian: '/ujian/plotting-jadwal/'
+            };
+            document.getElementById('form-plotting').action = routes[tahap] + pengajuanId;
+
+            // Anggota 1 & 2 tetap dropdown penuh (bisa diganti manual), tapi
+            // otomatis pre-select ke Pembimbing 1 & 2 begitu mahasiswa dipilih.
+            const anggota1 = document.getElementById('plotting-anggota1');
+            const anggota2 = document.getElementById('plotting-anggota2');
+            if (pembimbing1) anggota1.value = pembimbing1;
+            if (pembimbing2) anggota2.value = pembimbing2;
         }
     </script>
 </body>
