@@ -383,16 +383,7 @@
                             @if($p->status_tahap === 'tahap_1_bimbingan')
                                 <a href="{{ route('sempro.create', $p->id) }}" class="btn btn-sm btn-primary">Daftar Sempro (FR-03) &ndash; Unggah FPT-TI-01</a>
                             @elseif($p->status_tahap === 'tahap_2_sempro')
-                                <form action="{{ route('semhas.store', $p->id) }}" method="POST" style="display:flex; gap:8px; align-items:center;">
-                                    @csrf
-                                    <input type="date" name="jadwal_usulan_sidang" class="form-control" style="width:160px;" required value="{{ date('Y-m-d', strtotime('+15 days')) }}">
-                                    <input type="hidden" name="naskah_bab_1_5_url" value="/docs/bab1_5.pdf">
-                                    <input type="hidden" name="draf_artikel_ilmiah_urls[]" value="/docs/art1.pdf">
-                                    <input type="hidden" name="draf_artikel_ilmiah_urls[]" value="/docs/art2.pdf">
-                                    <input type="hidden" name="bukti_status_under_review_url" value="/docs/review.pdf">
-                                    <input type="hidden" name="bukti_spp_url" value="/docs/spp.pdf">
-                                    <button type="submit" class="btn btn-sm btn-primary">Daftar Semhas (FR-05)</button>
-                                </form>
+                                <a href="{{ route('semhas.create', $p->id) }}" class="btn btn-sm btn-primary">Daftar Semhas (FR-05) &ndash; Unggah FPT-SH-01</a>
                             @elseif($p->status_tahap === 'tahap_3_semhas')
                                 <form action="{{ route('ujian.store', $p->id) }}" method="POST" style="display:flex; gap:8px; align-items:center;">
                                     @csrf
@@ -519,6 +510,97 @@
                                     <a href="{{ route('dokumen.cetak', ['kode' => 'UNDANGAN-SEMPRO', 'id' => $sidangSempro->id]) }}" class="btn btn-sm btn-primary" target="_blank">Unduh PDF</a>
                                 @else
                                     <span style="color:#94a3b8; font-size:12px;">Menunggu plotting</span>
+                                @endif
+                            </td>
+                        </tr>
+                        @endif
+                    @empty
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        @if(Auth::check() && in_array(Auth::user()->role, ['komisi_tesis', 'kaprodi', 'admin_prodi']))
+        <div class="box">
+            <div class="box-title">Verifikasi Pendaftaran Semhas</div>
+            <p style="color:#64748b; font-size:13.5px;">Setujui atau tolak pendaftaran Seminar Hasil sebelum Form Permohonan (FPT-SH-01) bisa diunduh mahasiswa.</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Mahasiswa</th>
+                        <th>Jadwal Usulan</th>
+                        <th>Form FPT-SH-01</th>
+                        <th>Status Verifikasi</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($pengajuans as $p)
+                        @if($p->pendaftaranSemhas)
+                        <tr>
+                            <td><strong>{{ $p->mahasiswa->name }}</strong><br>{{ $p->mahasiswa->identifier }}</td>
+                            <td>{{ \Carbon\Carbon::parse($p->pendaftaranSemhas->jadwal_usulan_sidang)->translatedFormat('d F Y, H:i') }}</td>
+                            <td>
+                                @if($p->pendaftaranSemhas->form_fpt_sh_01_url)
+                                    <a href="{{ $p->pendaftaranSemhas->form_fpt_sh_01_url }}" target="_blank" class="btn btn-sm btn-primary">Lihat PDF</a>
+                                @else
+                                    <span style="color:#dc2626; font-size:12px;">Belum diunggah</span>
+                                @endif
+                            </td>
+                            <td>
+                                @if($p->pendaftaranSemhas->status_verifikasi_admin === 'verified')
+                                    <span class="badge badge-green">Disetujui</span>
+                                @elseif($p->pendaftaranSemhas->status_verifikasi_admin === 'rejected')
+                                    <span class="badge badge-red" style="background:#fee2e2; color:#991b1b;">Ditolak</span>
+                                @else
+                                    <span class="badge badge-yellow">Menunggu Verifikasi</span>
+                                @endif
+                            </td>
+                            <td>
+                                @if($p->pendaftaranSemhas->status_verifikasi_admin === 'pending')
+                                    <form action="{{ route('semhas.verifikasi', $p->pendaftaranSemhas->id) }}" method="POST" style="display:inline;">
+                                        @csrf
+                                        <input type="hidden" name="status_verifikasi_admin" value="verified">
+                                        <button type="submit" class="btn btn-sm btn-success">Setujui</button>
+                                    </form>
+                                    <form action="{{ route('semhas.verifikasi', $p->pendaftaranSemhas->id) }}" method="POST" style="display:inline;">
+                                        @csrf
+                                        <input type="hidden" name="status_verifikasi_admin" value="rejected">
+                                        <button type="submit" class="btn btn-sm btn-danger">Tolak</button>
+                                    </form>
+                                @else
+                                    <span style="color:#94a3b8; font-size:12px;">Selesai</span>
+                                @endif
+                            </td>
+                        </tr>
+                        @endif
+                    @empty
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        @endif
+
+        <div class="box">
+            <div class="box-title">Unduh Dokumen Semhas (PDF)</div>
+            <p style="color:#64748b; font-size:13.5px;">Form Permohonan tersedia begitu pendaftaran disetujui.</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Mahasiswa</th>
+                        <th>Form Permohonan (FPT-SH-01)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($pengajuans as $p)
+                        @if($p->pendaftaranSemhas)
+                        <tr>
+                            <td><strong>{{ $p->mahasiswa->name }}</strong><br>{{ $p->mahasiswa->identifier }}</td>
+                            <td>
+                                @if($p->pendaftaranSemhas->status_verifikasi_admin === 'verified')
+                                    <a href="{{ $p->pendaftaranSemhas->form_fpt_sh_01_url }}" class="btn btn-sm btn-primary" target="_blank">Unduh PDF</a>
+                                @else
+                                    <span style="color:#94a3b8; font-size:12px;">Belum disetujui</span>
                                 @endif
                             </td>
                         </tr>

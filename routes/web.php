@@ -56,6 +56,7 @@ Route::prefix('sempro')->name('sempro.')->group(function () {
 Route::prefix('semhas')->name('semhas.')->group(function () {
     Route::get('/daftar/{pengajuanId}', [PendaftaranSemhasController::class, 'create'])->name('create');
     Route::post('/daftar/{pengajuanId}', [PendaftaranSemhasController::class, 'store'])->name('store');
+    Route::post('/verifikasi/{id}', [PendaftaranSemhasController::class, 'verifikasi'])->name('verifikasi');
     Route::post('/plotting-jadwal/{pengajuanId}', [KomisiTesisController::class, 'plottingSemhas'])->name('plotting');
 });
 
