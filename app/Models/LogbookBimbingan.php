@@ -12,6 +12,11 @@ class LogbookBimbingan extends Model
     protected $table = 'logbook_bimbingans';
     protected $guarded = [];
 
+    protected $casts = [
+        'tanggal_bimbingan' => 'date',
+        'approved_at' => 'datetime',
+    ];
+
     public function pengajuanTesis()
     {
         return $this->belongsTo(PengajuanTesis::class, 'pengajuan_tesis_id');

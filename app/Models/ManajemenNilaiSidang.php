@@ -12,6 +12,10 @@ class ManajemenNilaiSidang extends Model
     protected $table = 'manajemen_nilai_sidangs';
     protected $guarded = [];
 
+    protected $casts = [
+        'batas_waktu_revisi' => 'date',
+    ];
+
     public function sidang()
     {
         return $this->belongsTo(AktivitasSidang::class, 'sidang_id');

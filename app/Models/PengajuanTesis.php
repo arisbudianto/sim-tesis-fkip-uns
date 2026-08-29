@@ -12,6 +12,10 @@ class PengajuanTesis extends Model
     protected $table = 'pengajuan_tesis';
     protected $guarded = [];
 
+    protected $casts = [
+        'tanggal_sk_pembimbing' => 'date',
+    ];
+
     public function mahasiswa()
     {
         return $this->belongsTo(User::class, 'mahasiswa_id');

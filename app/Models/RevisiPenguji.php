@@ -12,6 +12,10 @@ class RevisiPenguji extends Model
     protected $table = 'revisi_pengujis';
     protected $guarded = [];
 
+    protected $casts = [
+        'acc_at' => 'datetime',
+    ];
+
     public function revisiDokumen()
     {
         return $this->belongsTo(RevisiDokumen::class, 'revisi_dokumen_id');

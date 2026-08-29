@@ -12,6 +12,11 @@ class AktivitasSidang extends Model
     protected $table = 'aktivitas_sidangs';
     protected $guarded = [];
 
+    protected $casts = [
+        'waktu_mulai' => 'datetime',
+        'waktu_selesai' => 'datetime',
+    ];
+
     public function pengajuanTesis()
     {
         return $this->belongsTo(PengajuanTesis::class, 'pengajuan_tesis_id');
