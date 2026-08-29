@@ -39,7 +39,7 @@ class DashboardController extends Controller
             'total_sidang' => AktivitasSidang::count()
         ];
 
-        $pengajuans = PengajuanTesis::with(['mahasiswa', 'pembimbing1', 'pembimbing2', 'logbooks.dosen', 'aktivitasSidangs.pengujiSidangs.dosen'])->latest()->get();
+        $pengajuans = PengajuanTesis::with(['mahasiswa', 'pembimbing1', 'pembimbing2', 'logbooks.dosen', 'aktivitasSidangs.pengujiSidangs.dosen', 'pendaftaranSempro'])->latest()->get();
         $dosens = User::where('role', 'dosen')->get();
         $komisi = User::where('is_komisi_tesis', true)->first();
         $mahasiswas = User::where('role', 'mahasiswa')->get();

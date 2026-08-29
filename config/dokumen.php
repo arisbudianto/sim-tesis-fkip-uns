@@ -3,6 +3,7 @@
 use App\Models\AktivitasSidang;
 use App\Models\RevisiDokumen;
 use App\Models\ManajemenNilaiSidang;
+use App\Models\PendaftaranSempro;
 
 /**
  * Registry seluruh dokumen resmi yang bisa digenerate sistem sebagai PDF
@@ -17,10 +18,22 @@ use App\Models\ManajemenNilaiSidang;
  */
 return [
     'FPT-TI-01' => [
-        'model' => AktivitasSidang::class,
+        'model' => PendaftaranSempro::class,
         'view' => 'fpt-ti-01-permohonan-ujian',
-        'judul' => 'Permohonan Ujian Tesis',
+        'judul' => 'Permohonan Ujian Tesis 1 (Seminar dan Ujian Proposal)',
+        'nomor' => fn ($sempro) => null,
+    ],
+    'SURAT-TUGAS-SEMPRO' => [
+        'model' => AktivitasSidang::class,
+        'view' => 'surat-tugas-sempro',
+        'judul' => 'Surat Tugas Ujian Tesis 1 (Seminar dan Ujian Proposal)',
         'nomor' => fn ($sidang) => $sidang->nomor_surat_tugas,
+    ],
+    'UNDANGAN-SEMPRO' => [
+        'model' => AktivitasSidang::class,
+        'view' => 'undangan-sempro',
+        'judul' => 'Undangan Menguji Tesis 1 (Seminar dan Ujian Proposal)',
+        'nomor' => fn ($sidang) => $sidang->nomor_undangan,
     ],
     'FPT-TI-02' => [
         'model' => AktivitasSidang::class,

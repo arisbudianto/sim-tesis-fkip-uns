@@ -60,7 +60,7 @@ class DatabaseSeeder extends Seeder
         User::create([
             'id' => Str::uuid(),
             'name' => 'Abdul Haris Setiawan, S.Pd., M.Pd., Ph.D.',
-            'identifier' => '197908222006041001',
+            'identifier' => '198003242005011002',
             'email' => 'kaprodi.pgv@fkip.uns.ac.id',
             'password' => Hash::make('password'),
             'role' => 'kaprodi'

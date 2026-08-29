@@ -115,7 +115,7 @@
     <div class="nav-tabs">
         <button class="nav-tab active" onclick="switchTab('tab-overview')">Ringkasan Sistem</button>
         <button class="nav-tab" onclick="switchTab('tab-pengajuan')">FR-01: Usulan & Alokasi Pembimbing</button>
-        <button class="nav-tab" onclick="switchTab('tab-logbook')">FR-02: Logbook Bimbingan</button>
+        {{-- Tab FR-02: Logbook Bimbingan — sementara dihapus/disembunyikan --}}
         <button class="nav-tab" onclick="switchTab('tab-pendaftaran')">FR-03,05,07: Pendaftaran Sidang (H-14)</button>
         <button class="nav-tab" onclick="switchTab('tab-sidang')">FR-04,06,08: Plotting Komisi Tesis</button>
         <button class="nav-tab" onclick="switchTab('tab-penilaian')">FR-09: Penilaian & BAP</button>
@@ -322,6 +322,7 @@
     </div>
 
     <!-- TAB 3: FR-02 Logbook Bimbingan -->
+    {{-- TAB: FR-02 Logbook Bimbingan — sementara dihapus/disembunyikan
     <div id="tab-logbook" class="tab-content">
         <div class="box">
             <div class="box-title">Pencatatan & Digital Approval Logbook Bimbingan (FR-02)</div>
@@ -359,6 +360,7 @@
             </table>
         </div>
     </div>
+    --}}
 
     <!-- TAB 4: Pendaftaran Sidang H-14 -->
     <div id="tab-pendaftaran" class="tab-content">
@@ -419,6 +421,109 @@
                         </td>
                     </tr>
                     @endforeach
+                </tbody>
+            </table>
+        </div>
+
+        @if(Auth::check() && in_array(Auth::user()->role, ['komisi_tesis', 'kaprodi', 'admin_prodi']))
+        <div class="box">
+            <div class="box-title">Verifikasi Pendaftaran Sempro</div>
+            <p style="color:#64748b; font-size:13.5px;">Setujui atau tolak pendaftaran Seminar Proposal sebelum Form Permohonan (FPT-TI-01) bisa diunduh mahasiswa.</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Mahasiswa</th>
+                        <th>Jadwal Usulan</th>
+                        <th>Status Verifikasi</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($pengajuans as $p)
+                        @if($p->pendaftaranSempro)
+                        <tr>
+                            <td><strong>{{ $p->mahasiswa->name }}</strong><br>{{ $p->mahasiswa->identifier }}</td>
+                            <td>{{ \Carbon\Carbon::parse($p->pendaftaranSempro->jadwal_usulan_sidang)->translatedFormat('d F Y, H:i') }}</td>
+                            <td>
+                                @if($p->pendaftaranSempro->status_verifikasi_admin === 'verified')
+                                    <span class="badge badge-green">Disetujui</span>
+                                @elseif($p->pendaftaranSempro->status_verifikasi_admin === 'rejected')
+                                    <span class="badge badge-red" style="background:#fee2e2; color:#991b1b;">Ditolak</span>
+                                @else
+                                    <span class="badge badge-yellow">Menunggu Verifikasi</span>
+                                @endif
+                            </td>
+                            <td>
+                                @if($p->pendaftaranSempro->status_verifikasi_admin === 'pending')
+                                    <form action="{{ route('sempro.verifikasi', $p->pendaftaranSempro->id) }}" method="POST" style="display:inline;">
+                                        @csrf
+                                        <input type="hidden" name="status_verifikasi_admin" value="verified">
+                                        <button type="submit" class="btn btn-sm btn-success">Setujui</button>
+                                    </form>
+                                    <form action="{{ route('sempro.verifikasi', $p->pendaftaranSempro->id) }}" method="POST" style="display:inline;">
+                                        @csrf
+                                        <input type="hidden" name="status_verifikasi_admin" value="rejected">
+                                        <button type="submit" class="btn btn-sm btn-danger">Tolak</button>
+                                    </form>
+                                @else
+                                    <span style="color:#94a3b8; font-size:12px;">Selesai</span>
+                                @endif
+                            </td>
+                        </tr>
+                        @endif
+                    @empty
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        @endif
+
+        <div class="box">
+            <div class="box-title">Unduh Dokumen Sempro (PDF)</div>
+            <p style="color:#64748b; font-size:13.5px;">Form Permohonan tersedia begitu pendaftaran disetujui. Surat Tugas & Undangan Penguji tersedia setelah Komisi Tesis melakukan plotting jadwal & dewan penguji.</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Mahasiswa</th>
+                        <th>Form Permohonan (FPT-TI-01)</th>
+                        <th>Surat Tugas</th>
+                        <th>Undangan Penguji</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($pengajuans as $p)
+                        @if($p->pendaftaranSempro)
+                        <tr>
+                            <td><strong>{{ $p->mahasiswa->name }}</strong><br>{{ $p->mahasiswa->identifier }}</td>
+                            <td>
+                                @if($p->pendaftaranSempro->status_verifikasi_admin === 'verified')
+                                    <a href="{{ route('dokumen.cetak', ['kode' => 'FPT-TI-01', 'id' => $p->pendaftaranSempro->id]) }}" class="btn btn-sm btn-primary" target="_blank">Unduh PDF</a>
+                                @else
+                                    <span style="color:#94a3b8; font-size:12px;">Belum disetujui</span>
+                                @endif
+                            </td>
+                            @php
+                                $sidangSempro = $p->aktivitasSidangs->firstWhere('tahap_sidang', 'sempro');
+                                $pengujiLengkap = $sidangSempro && $sidangSempro->pengujiSidangs->count() >= 3;
+                            @endphp
+                            <td>
+                                @if($pengujiLengkap)
+                                    <a href="{{ route('dokumen.cetak', ['kode' => 'SURAT-TUGAS-SEMPRO', 'id' => $sidangSempro->id]) }}" class="btn btn-sm btn-primary" target="_blank">Unduh PDF</a>
+                                @else
+                                    <span style="color:#94a3b8; font-size:12px;">Menunggu plotting</span>
+                                @endif
+                            </td>
+                            <td>
+                                @if($pengujiLengkap)
+                                    <a href="{{ route('dokumen.cetak', ['kode' => 'UNDANGAN-SEMPRO', 'id' => $sidangSempro->id]) }}" class="btn btn-sm btn-primary" target="_blank">Unduh PDF</a>
+                                @else
+                                    <span style="color:#94a3b8; font-size:12px;">Menunggu plotting</span>
+                                @endif
+                            </td>
+                        </tr>
+                        @endif
+                    @empty
+                    @endforelse
                 </tbody>
             </table>
         </div>

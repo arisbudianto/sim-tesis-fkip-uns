@@ -112,4 +112,38 @@ class PendaftaranSemproController extends Controller
 
         return redirect()->route('dashboard')->with('success', 'Pendaftaran Seminar Proposal (Sempro) berhasil diajukan!');
     }
+
+    /**
+     * Verifikasi pendaftaran Sempro oleh Admin Prodi / Komisi Tesis / Kaprodi.
+     * Setelah status jadi 'verified', Form Permohonan (FPT-TI-01), Surat Tugas,
+     * dan Undangan Penguji baru bisa diunduh.
+     */
+    public function verifikasi(Request $request, $id)
+    {
+        $user = $request->user();
+        if (!$user || !in_array($user->role, ['komisi_tesis', 'kaprodi', 'admin_prodi'])) {
+            $msg = 'Anda tidak berwenang memverifikasi pendaftaran Sempro.';
+            return $request->wantsJson()
+                ? response()->json(['status' => 'error', 'message' => $msg], 403)
+                : back()->withErrors(['error' => $msg]);
+        }
+
+        $validated = $request->validate([
+            'status_verifikasi_admin' => 'required|in:verified,rejected',
+            'catatan_admin' => 'nullable|string',
+        ]);
+
+        $sempro = PendaftaranSempro::findOrFail($id);
+        $sempro->update($validated);
+
+        if ($request->wantsJson()) {
+            return response()->json(['status' => 'success', 'data' => $sempro]);
+        }
+
+        $pesan = $validated['status_verifikasi_admin'] === 'verified'
+            ? 'Pendaftaran Sempro disetujui.'
+            : 'Pendaftaran Sempro ditolak.';
+
+        return redirect()->route('dashboard')->with('success', $pesan);
+    }
 }

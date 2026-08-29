@@ -12,6 +12,10 @@ class PendaftaranSempro extends Model
     protected $table = 'pendaftaran_sempros';
     protected $guarded = [];
 
+    protected $casts = [
+        'jadwal_usulan_sidang' => 'datetime',
+    ];
+
     public function pengajuanTesis()
     {
         return $this->belongsTo(PengajuanTesis::class, 'pengajuan_tesis_id');

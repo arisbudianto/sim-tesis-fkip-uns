@@ -48,6 +48,7 @@ Route::prefix('logbook')->name('logbook.')->group(function () {
 Route::prefix('sempro')->name('sempro.')->group(function () {
     Route::get('/daftar/{pengajuanId}', [PendaftaranSemproController::class, 'create'])->name('create');
     Route::post('/daftar/{pengajuanId}', [PendaftaranSemproController::class, 'store'])->name('store');
+    Route::post('/verifikasi/{id}', [PendaftaranSemproController::class, 'verifikasi'])->name('verifikasi');
     Route::post('/plotting-jadwal/{pengajuanId}', [KomisiTesisController::class, 'plottingSempro'])->name('plotting');
 });
 
