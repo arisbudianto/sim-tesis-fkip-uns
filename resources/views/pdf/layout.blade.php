@@ -9,10 +9,13 @@
     body { font-family: 'DejaVu Sans', sans-serif; font-size: 11px; color: #1a1a1a; }
     table { border-collapse: collapse; width: 100%; }
     .kop-table td { vertical-align: middle; }
-    .kop-logo { width: 70px; font-weight: bold; text-align: center; border: 1px solid #999; padding: 8px 4px; font-size: 9px; }
-    .kop-text h1 { font-size: 13px; margin: 0 0 2px 0; }
-    .kop-text p { margin: 0; font-size: 9.5px; }
-    .kop-line { border-bottom: 2px solid #1e3a8a; margin: 6px 0 10px 0; }
+    .kop-logo { width: 90px; text-align: center; }
+    .kop-logo img { width: 82px; }
+    .kop-text { padding-left: 12px; }
+    .kop-text .unit-name { font-size: 12px; font-weight: bold; margin: 0 0 1px 0; }
+    .kop-text .prodi-name { font-size: 11px; font-weight: bold; margin: 0 0 3px 0; }
+    .kop-text p { margin: 0; font-size: 9px; line-height: 1.35; color: #333; }
+    .kop-line { border-bottom: 2.5px solid #0e6ba8; margin: 6px 0 10px 0; }
     .doc-meta { font-size: 9px; color: #555; margin-bottom: 10px; }
     .doc-meta span { margin-right: 14px; }
     .form-title { text-align: center; font-size: 13px; font-weight: bold; text-decoration: underline; margin: 6px 0 2px 0; }
@@ -30,13 +33,24 @@
 </head>
 <body>
 
+@php
+    $logoPath = public_path('assets/logo-uns.png');
+    $logoBase64 = file_exists($logoPath) ? base64_encode(file_get_contents($logoPath)) : null;
+@endphp
+
 <table class="kop-table">
 <tr>
-    <td class="kop-logo">LOGO<br>UNS</td>
+    <td class="kop-logo">
+        @if($logoBase64)
+            <img src="data:image/png;base64,{{ $logoBase64 }}" alt="Logo UNS">
+        @endif
+    </td>
     <td class="kop-text">
-        <h1>FAKULTAS KEGURUAN DAN ILMU PENDIDIKAN &mdash; UNIVERSITAS SEBELAS MARET</h1>
-        <p>Program Studi Magister Pendidikan Guru Vokasi &mdash; Komisi Tesis</p>
-        <p>Jl. Ahmad Yani 200, Pabelan, Kartasura, Surakarta 57162</p>
+        <p class="unit-name">Fakultas Keguruan dan Ilmu Pendidikan</p>
+        <p class="prodi-name">Program Studi Magister Pendidikan Guru Vokasi</p>
+        <p>Kampus V UNS Pabelan, Jl. A. Yani No. 200 A, Pabelan, Kartasura, Sukoharjo, Jawa Tengah, Indonesia 57161</p>
+        <p>Telepon: (0271) 669124</p>
+        <p>fkip@fkip.uns.ac.id | fkip.uns.ac.id</p>
     </td>
 </tr>
 </table>
