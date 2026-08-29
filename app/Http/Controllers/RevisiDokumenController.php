@@ -104,12 +104,23 @@ class RevisiDokumenController extends Controller
         $tesis = $revisi->sidang->pengajuanTesis;
         $tahap = $revisi->sidang->tahap_sidang;
 
-        if ($tahap === 'sempro') {
-            $tesis->update(['status_tahap' => 'tahap_3_semhas']);
-        } elseif ($tahap === 'semhas') {
-            $tesis->update(['status_tahap' => 'tahap_4_ujian']);
-        } elseif ($tahap === 'ujian') {
-            $tesis->update(['status_tahap' => 'selesai_yudisium']);
+        $targetTahap = match ($tahap) {
+            'sempro' => 'tahap_3_semhas',
+            'semhas' => 'tahap_4_ujian',
+            'ujian'  => 'selesai_yudisium',
+            default  => null,
+        };
+
+        if ($targetTahap) {
+            // Ditegakkan lewat LifecycleStateMachine::transition() (bukan update()
+            // langsung) supaya canTransitionTo() ikut memvalidasi ulang prasyarat
+            // sebelum status_tahap benar-benar berpindah — satu titik kebenaran
+            // untuk seluruh state machine, bukan hanya gate saat pendaftaran.
+            try {
+                LifecycleStateMachine::transition($tesis, $targetTahap);
+            } catch (\Exception $e) {
+                return response()->json(['status' => 'error', 'message' => $e->getMessage()], 422);
+            }
         }
 
         return response()->json([
