@@ -38,19 +38,42 @@ class PengajuanTesisController extends Controller
     }
 
     /**
+     * Role yang berwenang menetapkan/mengubah Pembimbing 1 & 2.
+     * Mahasiswa hanya boleh MELIHAT siapa pembimbingnya, tidak mengedit.
+     */
+    protected function bolehAturPembimbing(?User $user): bool
+    {
+        return $user && in_array($user->role, ['komisi_tesis', 'kaprodi', 'admin_prodi']);
+    }
+
+    /**
      * Form edit pengajuan tesis (hanya untuk data di tahap_1_bimbingan —
      * setelah masuk ke tahap sempro dst, judul/fokus dianggap final).
      */
-    public function edit($id)
+    public function edit(Request $request, $id)
     {
         $pengajuan = PengajuanTesis::with(['mahasiswa', 'pembimbing1', 'pembimbing2'])->findOrFail($id);
+
+        $user = $request->user();
+        // Mahasiswa hanya boleh membuka pengajuan miliknya sendiri.
+        if ($user && $user->role === 'mahasiswa' && $user->id !== $pengajuan->mahasiswa_id) {
+            abort(403, 'Anda hanya bisa mengedit pengajuan tesis milik sendiri.');
+        }
+
         $dosens = User::where('role', 'dosen')->get();
-        return view('pengajuan.edit', compact('pengajuan', 'dosens'));
+        $canEditPembimbing = $this->bolehAturPembimbing($user);
+
+        return view('pengajuan.edit', compact('pengajuan', 'dosens', 'canEditPembimbing'));
     }
 
     public function update(Request $request, $id)
     {
         $pengajuan = PengajuanTesis::findOrFail($id);
+
+        $user = $request->user();
+        if ($user && $user->role === 'mahasiswa' && $user->id !== $pengajuan->mahasiswa_id) {
+            abort(403, 'Anda hanya bisa mengedit pengajuan tesis milik sendiri.');
+        }
 
         if ($pengajuan->status_tahap !== 'tahap_1_bimbingan') {
             $msg = 'Pengajuan tidak bisa diedit lagi karena sudah melewati Tahap 1 (Bimbingan).';
@@ -59,15 +82,25 @@ class PengajuanTesisController extends Controller
                 : back()->withErrors(['error' => $msg]);
         }
 
-        $validated = $request->validate([
+        $canEditPembimbing = $this->bolehAturPembimbing($user);
+
+        $rules = [
             'judul_tesis' => 'required|string|max:500',
             'bidang_fokus' => 'required|string',
             'abstrak_rencana' => 'nullable|string',
-            'pembimbing_1_id' => 'nullable|uuid|exists:users,id',
-            'pembimbing_2_id' => 'nullable|uuid|exists:users,id|different:pembimbing_1_id|required_with:pembimbing_1_id',
-            'nomor_sk_pembimbing' => 'nullable|string|required_with:pembimbing_1_id',
-            'tanggal_sk_pembimbing' => 'nullable|date|required_with:pembimbing_1_id',
-        ]);
+        ];
+
+        // Field pembimbing cuma divalidasi kalau memang role-nya berwenang.
+        // Mahasiswa yang somehow mengirim field ini tetap akan diabaikan
+        // di bawah, bukan cuma disembunyikan di tampilan.
+        if ($canEditPembimbing) {
+            $rules['pembimbing_1_id'] = 'nullable|uuid|exists:users,id';
+            $rules['pembimbing_2_id'] = 'nullable|uuid|exists:users,id|different:pembimbing_1_id|required_with:pembimbing_1_id';
+            $rules['nomor_sk_pembimbing'] = 'nullable|string|required_with:pembimbing_1_id';
+            $rules['tanggal_sk_pembimbing'] = 'nullable|date|required_with:pembimbing_1_id';
+        }
+
+        $validated = $request->validate($rules);
 
         $dataUpdate = [
             'judul_tesis' => $validated['judul_tesis'],
@@ -76,8 +109,9 @@ class PengajuanTesisController extends Controller
         ];
 
         // Pembimbing bersifat opsional di form ini — cuma diproses & dicek
-        // kuota kalau memang diisi (dropdown "-- Pilih Dosen --" tidak dipilih).
-        if (!empty($validated['pembimbing_1_id'])) {
+        // kuota kalau memang diisi (dropdown "-- Pilih Dosen --" tidak dipilih)
+        // DAN role user berwenang (Komisi Tesis/Kaprodi/Admin Prodi).
+        if ($canEditPembimbing && !empty($validated['pembimbing_1_id'])) {
             if (!AdvisorQuotaEngine::checkQuota($validated['pembimbing_1_id'], $id)) {
                 $msg = 'Pembimbing 1 melebihi kuota bimbingan!';
                 return $request->wantsJson()

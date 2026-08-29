@@ -20,6 +20,11 @@
         .form-control { width: 100%; box-sizing: border-box; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; font-family: inherit; }
         textarea.form-control { resize: vertical; min-height: 90px; }
         .hint { font-size: 11.5px; color: #64748b; margin-top: 4px; }
+        .readonly-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f1f5f9; }
+        .readonly-label { font-size: 13px; font-weight: 600; color: #334155; }
+        .readonly-value { font-size: 13.5px; }
+        .readonly-set { color: #166534; font-weight: 600; }
+        .readonly-empty { color: #b45309; background: #fef9c3; padding: 3px 10px; border-radius: 9999px; font-size: 12px; font-weight: 600; }
         .btn { width: 100%; padding: 12px 20px; border-radius: 6px; font-size: 14.5px; font-weight: 600; cursor: pointer; border: none; background: var(--accent); color: white; }
         .btn:hover { background: #1d4ed8; }
         .btn-back { display: inline-block; margin-bottom: 14px; color: #64748b; text-decoration: none; font-size: 13.5px; }
@@ -64,42 +69,70 @@
                 <textarea id="abstrak_rencana" name="abstrak_rencana" class="form-control">{{ old('abstrak_rencana', $pengajuan->abstrak_rencana) }}</textarea>
             </div>
 
-            <div class="section-title">Pembimbing 1 & 2 (Opsional)</div>
+            <div class="section-title">Pembimbing 1 & 2</div>
 
-            <div class="form-group">
-                <label for="pembimbing_1_id">Pembimbing 1 (Spesialis Studi)</label>
-                <select id="pembimbing_1_id" name="pembimbing_1_id" class="form-control">
-                    <option value="">-- Belum Dipilih --</option>
-                    @foreach($dosens as $d)
-                        <option value="{{ $d->id }}" @selected(old('pembimbing_1_id', $pengajuan->pembimbing_1_id) === $d->id)>
-                            {{ $d->name }} (Kuota Maks: {{ $d->kuota_bimbingan_maks }})
-                        </option>
-                    @endforeach
-                </select>
-            </div>
+            @if($canEditPembimbing)
+                <div class="form-group">
+                    <label for="pembimbing_1_id">Pembimbing 1 (Spesialis Studi)</label>
+                    <select id="pembimbing_1_id" name="pembimbing_1_id" class="form-control">
+                        <option value="">-- Belum Dipilih --</option>
+                        @foreach($dosens as $d)
+                            <option value="{{ $d->id }}" @selected(old('pembimbing_1_id', $pengajuan->pembimbing_1_id) === $d->id)>
+                                {{ $d->name }} (Kuota Maks: {{ $d->kuota_bimbingan_maks }})
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
 
-            <div class="form-group">
-                <label for="pembimbing_2_id">Pembimbing 2 (Spesialis Kependidikan)</label>
-                <select id="pembimbing_2_id" name="pembimbing_2_id" class="form-control">
-                    <option value="">-- Belum Dipilih --</option>
-                    @foreach($dosens as $d)
-                        <option value="{{ $d->id }}" @selected(old('pembimbing_2_id', $pengajuan->pembimbing_2_id) === $d->id)>
-                            {{ $d->name }} (Bidang: {{ $d->bidang_keahlian ?? 'Kependidikan' }})
-                        </option>
-                    @endforeach
-                </select>
-            </div>
+                <div class="form-group">
+                    <label for="pembimbing_2_id">Pembimbing 2 (Spesialis Kependidikan)</label>
+                    <select id="pembimbing_2_id" name="pembimbing_2_id" class="form-control">
+                        <option value="">-- Belum Dipilih --</option>
+                        @foreach($dosens as $d)
+                            <option value="{{ $d->id }}" @selected(old('pembimbing_2_id', $pengajuan->pembimbing_2_id) === $d->id)>
+                                {{ $d->name }} (Bidang: {{ $d->bidang_keahlian ?? 'Kependidikan' }})
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
 
-            <div class="form-group">
-                <label for="nomor_sk_pembimbing">Nomor SK Dekan</label>
-                <input type="text" id="nomor_sk_pembimbing" name="nomor_sk_pembimbing" class="form-control" value="{{ old('nomor_sk_pembimbing', $pengajuan->nomor_sk_pembimbing ?? 'SK/'.date('Y').'/FKIP-UNS') }}">
-            </div>
+                <div class="form-group">
+                    <label for="nomor_sk_pembimbing">Nomor SK Dekan</label>
+                    <input type="text" id="nomor_sk_pembimbing" name="nomor_sk_pembimbing" class="form-control" value="{{ old('nomor_sk_pembimbing', $pengajuan->nomor_sk_pembimbing ?? 'SK/'.date('Y').'/FKIP-UNS') }}">
+                </div>
 
-            <div class="form-group">
-                <label for="tanggal_sk_pembimbing">Tanggal Penetapan SK</label>
-                <input type="date" id="tanggal_sk_pembimbing" name="tanggal_sk_pembimbing" class="form-control" value="{{ old('tanggal_sk_pembimbing', optional($pengajuan->tanggal_sk_pembimbing)->format('Y-m-d') ?? date('Y-m-d')) }}">
-                <div class="hint">Isi Pembimbing 1, Pembimbing 2, Nomor SK, dan Tanggal SK sekaligus kalau ingin menetapkan/mengubah pembimbing. Kosongkan semua kalau belum mau diisi.</div>
-            </div>
+                <div class="form-group">
+                    <label for="tanggal_sk_pembimbing">Tanggal Penetapan SK</label>
+                    <input type="date" id="tanggal_sk_pembimbing" name="tanggal_sk_pembimbing" class="form-control" value="{{ old('tanggal_sk_pembimbing', optional($pengajuan->tanggal_sk_pembimbing)->format('Y-m-d') ?? date('Y-m-d')) }}">
+                    <div class="hint">Isi Pembimbing 1, Pembimbing 2, Nomor SK, dan Tanggal SK sekaligus kalau ingin menetapkan/mengubah pembimbing. Kosongkan semua kalau belum mau diisi.</div>
+                </div>
+            @else
+                {{-- Read-only untuk mahasiswa: cuma bisa lihat, tidak bisa mengedit.
+                     Penetapan pembimbing adalah wewenang Komisi Tesis / Kaprodi / Admin Prodi. --}}
+                <div class="readonly-row">
+                    <span class="readonly-label">Pembimbing 1</span>
+                    @if($pengajuan->pembimbing1)
+                        <span class="readonly-value readonly-set">{{ $pengajuan->pembimbing1->name }}</span>
+                    @else
+                        <span class="readonly-value readonly-empty">Belum Ditentukan</span>
+                    @endif
+                </div>
+                <div class="readonly-row">
+                    <span class="readonly-label">Pembimbing 2</span>
+                    @if($pengajuan->pembimbing2)
+                        <span class="readonly-value readonly-set">{{ $pengajuan->pembimbing2->name }}</span>
+                    @else
+                        <span class="readonly-value readonly-empty">Belum Ditentukan</span>
+                    @endif
+                </div>
+                @if($pengajuan->nomor_sk_pembimbing)
+                <div class="readonly-row">
+                    <span class="readonly-label">Nomor SK Dekan</span>
+                    <span class="readonly-value">{{ $pengajuan->nomor_sk_pembimbing }}</span>
+                </div>
+                @endif
+                <div class="hint" style="margin-top:10px;">Pembimbing ditetapkan oleh Komisi Tesis / Kaprodi, mahasiswa tidak dapat mengubahnya di sini.</div>
+            @endif
         </div>
 
         <button type="submit" class="btn">Simpan Perubahan</button>
