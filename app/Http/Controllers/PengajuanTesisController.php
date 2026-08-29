@@ -62,10 +62,43 @@ class PengajuanTesisController extends Controller
         $validated = $request->validate([
             'judul_tesis' => 'required|string|max:500',
             'bidang_fokus' => 'required|string',
-            'abstrak_rencana' => 'nullable|string'
+            'abstrak_rencana' => 'nullable|string',
+            'pembimbing_1_id' => 'nullable|uuid|exists:users,id',
+            'pembimbing_2_id' => 'nullable|uuid|exists:users,id|different:pembimbing_1_id|required_with:pembimbing_1_id',
+            'nomor_sk_pembimbing' => 'nullable|string|required_with:pembimbing_1_id',
+            'tanggal_sk_pembimbing' => 'nullable|date|required_with:pembimbing_1_id',
         ]);
 
-        $pengajuan->update($validated);
+        $dataUpdate = [
+            'judul_tesis' => $validated['judul_tesis'],
+            'bidang_fokus' => $validated['bidang_fokus'],
+            'abstrak_rencana' => $validated['abstrak_rencana'] ?? null,
+        ];
+
+        // Pembimbing bersifat opsional di form ini — cuma diproses & dicek
+        // kuota kalau memang diisi (dropdown "-- Pilih Dosen --" tidak dipilih).
+        if (!empty($validated['pembimbing_1_id'])) {
+            if (!AdvisorQuotaEngine::checkQuota($validated['pembimbing_1_id'], $id)) {
+                $msg = 'Pembimbing 1 melebihi kuota bimbingan!';
+                return $request->wantsJson()
+                    ? response()->json(['status' => 'error', 'message' => $msg], 422)
+                    : back()->withErrors(['error' => $msg])->withInput();
+            }
+
+            if (!AdvisorQuotaEngine::checkQuota($validated['pembimbing_2_id'], $id)) {
+                $msg = 'Pembimbing 2 melebihi kuota bimbingan!';
+                return $request->wantsJson()
+                    ? response()->json(['status' => 'error', 'message' => $msg], 422)
+                    : back()->withErrors(['error' => $msg])->withInput();
+            }
+
+            $dataUpdate['pembimbing_1_id'] = $validated['pembimbing_1_id'];
+            $dataUpdate['pembimbing_2_id'] = $validated['pembimbing_2_id'];
+            $dataUpdate['nomor_sk_pembimbing'] = $validated['nomor_sk_pembimbing'];
+            $dataUpdate['tanggal_sk_pembimbing'] = $validated['tanggal_sk_pembimbing'];
+        }
+
+        $pengajuan->update($dataUpdate);
 
         if ($request->wantsJson()) {
             return response()->json(['status' => 'success', 'data' => $pengajuan]);
@@ -108,14 +141,14 @@ class PengajuanTesisController extends Controller
             'tanggal_sk_pembimbing' => 'required|date'
         ]);
 
-        if (!AdvisorQuotaEngine::checkQuota($validated['pembimbing_1_id'])) {
+        if (!AdvisorQuotaEngine::checkQuota($validated['pembimbing_1_id'], $id)) {
             $msg = 'Pembimbing 1 melebihi kuota bimbingan!';
             return $request->wantsJson()
                 ? response()->json(['status' => 'error', 'message' => $msg], 422)
                 : back()->withErrors(['error' => $msg])->withInput();
         }
 
-        if (!AdvisorQuotaEngine::checkQuota($validated['pembimbing_2_id'])) {
+        if (!AdvisorQuotaEngine::checkQuota($validated['pembimbing_2_id'], $id)) {
             $msg = 'Pembimbing 2 melebihi kuota bimbingan!';
             return $request->wantsJson()
                 ? response()->json(['status' => 'error', 'message' => $msg], 422)
