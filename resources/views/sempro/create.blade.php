@@ -66,6 +66,12 @@
                 </div>
 
                 <div class="form-group">
+                    <label for="form_fpt_ti_01">Form FPT-TI-01: Permohonan Ujian Tesis 1 &ndash; sudah ditandatangani Pembimbing 1 & 2 (PDF, maks. 1MB) <span style="color:#dc2626">*</span></label>
+                    <input type="file" id="form_fpt_ti_01" name="form_fpt_ti_01" class="form-control" accept=".pdf" required>
+                    <div class="hint">Unggah hasil scan/PDF formulir FPT-TI-01 yang sudah ditandatangani Pembimbing Utama & Pembimbing Pendamping. Berkas ini yang akan ditinjau Admin Prodi/Komisi Tesis/Kaprodi sebelum menyetujui pendaftaran Anda.</div>
+                </div>
+
+                <div class="form-group">
                     <label for="naskah_proposal">Naskah Proposal (PDF, maks. 35MB) <span style="color:#dc2626">*</span></label>
                     <input type="file" id="naskah_proposal" name="naskah_proposal" class="form-control" accept=".pdf" required>
                 </div>

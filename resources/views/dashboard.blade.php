@@ -381,14 +381,7 @@
                         <td><span class="badge badge-blue">{{ $p->status_tahap }}</span></td>
                         <td>
                             @if($p->status_tahap === 'tahap_1_bimbingan')
-                                <form action="{{ route('sempro.store', $p->id) }}" method="POST" style="display:flex; gap:8px; align-items:center;">
-                                    @csrf
-                                    <input type="date" name="jadwal_usulan_sidang" class="form-control" style="width:160px;" required value="{{ date('Y-m-d', strtotime('+15 days')) }}">
-                                    <input type="hidden" name="naskah_proposal_url" value="/docs/proposal_{{ $p->mahasiswa->identifier }}.pdf">
-                                    <input type="hidden" name="bukti_spp_url" value="/docs/spp.pdf">
-                                    <input type="hidden" name="khs_url" value="/docs/khs.pdf">
-                                    <button type="submit" class="btn btn-sm btn-primary">Daftar Sempro (FR-03)</button>
-                                </form>
+                                <a href="{{ route('sempro.create', $p->id) }}" class="btn btn-sm btn-primary">Daftar Sempro (FR-03) &ndash; Unggah FPT-TI-01</a>
                             @elseif($p->status_tahap === 'tahap_2_sempro')
                                 <form action="{{ route('semhas.store', $p->id) }}" method="POST" style="display:flex; gap:8px; align-items:center;">
                                     @csrf
@@ -434,6 +427,7 @@
                     <tr>
                         <th>Mahasiswa</th>
                         <th>Jadwal Usulan</th>
+                        <th>Form FPT-TI-01</th>
                         <th>Status Verifikasi</th>
                         <th>Aksi</th>
                     </tr>
@@ -444,6 +438,13 @@
                         <tr>
                             <td><strong>{{ $p->mahasiswa->name }}</strong><br>{{ $p->mahasiswa->identifier }}</td>
                             <td>{{ \Carbon\Carbon::parse($p->pendaftaranSempro->jadwal_usulan_sidang)->translatedFormat('d F Y, H:i') }}</td>
+                            <td>
+                                @if($p->pendaftaranSempro->form_fpt_ti_01_url)
+                                    <a href="{{ $p->pendaftaranSempro->form_fpt_ti_01_url }}" target="_blank" class="btn btn-sm btn-primary">Lihat PDF</a>
+                                @else
+                                    <span style="color:#dc2626; font-size:12px;">Belum diunggah</span>
+                                @endif
+                            </td>
                             <td>
                                 @if($p->pendaftaranSempro->status_verifikasi_admin === 'verified')
                                     <span class="badge badge-green">Disetujui</span>
@@ -497,7 +498,7 @@
                             <td><strong>{{ $p->mahasiswa->name }}</strong><br>{{ $p->mahasiswa->identifier }}</td>
                             <td>
                                 @if($p->pendaftaranSempro->status_verifikasi_admin === 'verified')
-                                    <a href="{{ route('dokumen.cetak', ['kode' => 'FPT-TI-01', 'id' => $p->pendaftaranSempro->id]) }}" class="btn btn-sm btn-primary" target="_blank">Unduh PDF</a>
+                                    <a href="{{ $p->pendaftaranSempro->form_fpt_ti_01_url }}" class="btn btn-sm btn-primary" target="_blank">Unduh PDF</a>
                                 @else
                                     <span style="color:#94a3b8; font-size:12px;">Belum disetujui</span>
                                 @endif

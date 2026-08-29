@@ -48,6 +48,9 @@ class PendaftaranSemproController extends Controller
         // 2. Validasi Input dan Berkas PDF
         $validated = $request->validate([
             'jadwal_usulan_sidang' => 'required|date',
+            // FPT-TI-01: Permohonan Ujian Tesis 1 yang sudah ditandatangani
+            // Pembimbing 1 & 2 — wajib, PDF saja, maksimal 1MB.
+            'form_fpt_ti_01'       => 'required|file|mimes:pdf|max:1024',
             'naskah_proposal'      => 'nullable|file|mimes:pdf|max:35840', // Maks 35 MB
             'bukti_spp'            => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
             'khs'                  => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
@@ -71,6 +74,11 @@ class PendaftaranSemproController extends Controller
             'jadwal_usulan_sidang'     => $validated['jadwal_usulan_sidang'],
             'status_verifikasi_admin'  => 'pending',
         ];
+
+        // Berkas FPT-TI-01 (wajib) — bukti persetujuan tertanda tangan
+        // Pembimbing 1 & 2, ditinjau Admin/Komisi/Kaprodi sebelum menyetujui.
+        $pathForm = $request->file('form_fpt_ti_01')->store('sempro/fpt-ti-01', 'public');
+        $dataPendaftaran['form_fpt_ti_01_url'] = '/storage/' . $pathForm;
 
         if ($request->hasFile('naskah_proposal')) {
             $path = $request->file('naskah_proposal')->store('sempro/naskah', 'public');
