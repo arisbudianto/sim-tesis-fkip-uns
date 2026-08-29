@@ -203,12 +203,54 @@
 
             <div class="box">
                 <div class="box-title">Komisi Tesis: Alokasi Pembimbing 1 & 2 (FR-01)</div>
+
+                <table style="margin-bottom: 24px;">
+                    <thead>
+                        <tr>
+                            <th>Mahasiswa</th>
+                            <th>Judul Tesis</th>
+                            <th>Pembimbing 1</th>
+                            <th>Pembimbing 2</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($pengajuans as $p)
+                        <tr>
+                            <td><strong>{{ $p->mahasiswa->identifier ?? '-' }}</strong><br>{{ $p->mahasiswa->name ?? '-' }}</td>
+                            <td>{{ Str::limit($p->judul_tesis, 50) }}</td>
+                            <td>
+                                @if($p->pembimbing1)
+                                    <span class="badge badge-green">{{ $p->pembimbing1->name }}</span>
+                                @else
+                                    <span class="badge badge-yellow">Belum Dialokasikan</span>
+                                @endif
+                            </td>
+                            <td>
+                                @if($p->pembimbing2)
+                                    <span class="badge badge-green">{{ $p->pembimbing2->name }}</span>
+                                @else
+                                    <span class="badge badge-yellow">Belum Dialokasikan</span>
+                                @endif
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-primary" onclick="selectPengajuanForAlokasi('{{ $p->id }}')">
+                                    {{ ($p->pembimbing1 && $p->pembimbing2) ? 'Ubah' : 'Alokasikan' }}
+                                </button>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr><td colspan="5" style="text-align: center; color: #64748b;">Belum ada pengajuan tesis yang bisa dialokasikan.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+
                 <form id="form-alokasi" method="POST">
                     @csrf
                     <div class="form-group">
                         <label>Pilih Judul Mahasiswa:</label>
                         <select id="select-pengajuan" class="form-control" onchange="updateAlokasiAction(this.value)">
-                            <option value="">-- Pilih Pengajuan Tesis --</option>
+                            <option value="">-- Pilih Pengajuan Tesis (atau klik 'Alokasikan' di tabel atas) --</option>
                             @foreach($pengajuans as $p)
                                 <option value="{{ $p->id }}">{{ $p->mahasiswa->name }} - {{ Str::limit($p->judul_tesis, 40) }}</option>
                             @endforeach
@@ -439,6 +481,13 @@
             if(pengajuanId) {
                 document.getElementById('form-alokasi').action = '/pengajuan/' + pengajuanId + '/alokasi-pembimbing';
             }
+        }
+
+        function selectPengajuanForAlokasi(pengajuanId) {
+            const select = document.getElementById('select-pengajuan');
+            select.value = pengajuanId;
+            updateAlokasiAction(pengajuanId);
+            document.getElementById('form-alokasi').scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
     </script>
 </body>
