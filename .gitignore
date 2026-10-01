@@ -1,0 +1,15 @@
+/vendor
+/node_modules
+/public/build
+/.env
+/.env.backup
+/.env.production
+/storage/*.key
+.phpunit.result.cache
+
+storage/app/public/*
+public/storage/*
+storage/logs/*.log
+error_log
+public/error_log
+tesis.zip.github/workflows/ci.yml

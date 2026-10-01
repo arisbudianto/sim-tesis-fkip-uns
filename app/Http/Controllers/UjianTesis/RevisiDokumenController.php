@@ -1,0 +1,164 @@
+<?php
+
+namespace App\Http\Controllers\UjianTesis;
+
+use App\Http\Controllers\Controller;
+
+use App\Domain\Audit\Services\AuditLogger;
+use App\Domain\UjianTesis\Models\RevisiDokumen;
+use App\Domain\UjianTesis\Models\RevisiPenguji;
+use App\Domain\Sidang\Models\AktivitasSidang;
+use App\Domain\StateEngine\Services\LifecycleStateMachine;
+use Illuminate\Http\Request;
+
+class RevisiDokumenController extends Controller
+{
+    public function submitMatriks(Request $request, $sidangId)
+    {
+        // GATE State Machine: mahasiswa hanya boleh submit matriks revisi
+        // JIKA sidang ini sudah direkap nilainya oleh Komisi Tesis
+        // (PenilaianSidangController::rekapNilaiKomisi) DAN keputusannya
+        // bukan 'ujian_ulang' (kalau ujian ulang, tidak ada revisi —
+        // mahasiswa wajib mengulang sidang, bukan mengirim revisi).
+        $sidang = AktivitasSidang::with('manajemenNilai', 'pengajuanTesis')->findOrFail($sidangId);
+
+        // Otorisasi kepemilikan: hanya mahasiswa pemilik pengajuan tesis
+        // sidang ini (atau pengendali akademik) yang boleh submit matriks —
+        // menutup celah submit matriks atas nama mahasiswa lain.
+        $this->authorize('daftarSidang', $sidang->pengajuanTesis);
+
+        if (!$sidang->manajemenNilai) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Matriks revisi belum bisa diajukan: Komisi Tesis belum merekap nilai & keputusan sidang ini.'
+            ], 422);
+        }
+
+        if ($sidang->manajemenNilai->keputusan_sidang === 'ujian_ulang') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Keputusan sidang adalah Ujian Ulang — mahasiswa wajib mengulang sidang, bukan mengirim matriks revisi.'
+            ], 422);
+        }
+
+        $validated = $request->validate([
+            'naskah_revisi_final_url' => 'required|string',
+            'bukti_luaran_final_url' => 'nullable|string',
+            'matriks' => 'required|array',
+            'matriks.*.dosen_penguji_id' => 'required|uuid|exists:users,id',
+            'matriks.*.uraian_hasil_perbaikan' => 'required|string',
+            'matriks.*.bukti_halaman_perbaikan' => 'required|string'
+        ]);
+
+        $revisi = RevisiDokumen::updateOrCreate(
+            ['sidang_id' => $sidangId],
+            [
+                'naskah_revisi_final_url' => $validated['naskah_revisi_final_url'],
+                'bukti_luaran_final_url' => $validated['bukti_luaran_final_url'] ?? null,
+                'status_approval_semua' => false
+            ]
+        );
+
+        foreach ($validated['matriks'] as $m) {
+            RevisiPenguji::updateOrCreate(
+                [
+                    'revisi_dokumen_id' => $revisi->id,
+                    'dosen_penguji_id' => $m['dosen_penguji_id']
+                ],
+                [
+                    'uraian_hasil_perbaikan' => $m['uraian_hasil_perbaikan'],
+                    'bukti_halaman_perbaikan' => $m['bukti_halaman_perbaikan'],
+                    'status_acc' => 'pending'
+                ]
+            );
+        }
+
+        return response()->json(['status' => 'success', 'message' => 'Matriks revisi berhasil diajukan.', 'data' => $revisi->load('revisiPengujis')]);
+    }
+
+    public function accPenguji(Request $request, $revisiPengujiId)
+    {
+        $item = RevisiPenguji::findOrFail($revisiPengujiId);
+
+        // Otorisasi kepemilikan via Policy: seorang dosen hanya boleh
+        // memberi ACC pada baris revisi miliknya sendiri, kecuali
+        // Komisi Tesis/Kaprodi/Admin Prodi untuk override administratif.
+        $this->authorize('acc', $item);
+
+        $item->update([
+            'status_acc' => 'acc',
+            'feedback_penguji' => $request->input('feedback_penguji', 'Perbaikan disetujui.'),
+            'acc_at' => now()
+        ]);
+
+        $revisi = $item->revisiDokumen;
+        $totalPenguji = $revisi->revisiPengujis()->count();
+        $totalAcc = $revisi->revisiPengujis()->where('status_acc', 'acc')->count();
+
+        if ($totalPenguji > 0 && $totalPenguji === $totalAcc) {
+            $revisi->update(['status_approval_semua' => true]);
+        }
+
+        AuditLogger::log(
+            $request->user(),
+            'revisi.accPenguji',
+            'RevisiPenguji',
+            $item->id,
+            "ACC revisi oleh dosen penguji {$item->dosen_penguji_id}.",
+            ['status_acc' => 'acc']
+        );
+
+        return response()->json(['status' => 'success', 'data' => $item]);
+    }
+
+    public function pengesahanKaprodi(Request $request, $revisiId)
+    {
+        $revisi = RevisiDokumen::with('sidang.pengajuanTesis')->findOrFail($revisiId);
+
+        if (!$revisi->status_approval_semua) {
+            return response()->json(['status' => 'error', 'message' => 'Belum seluruh dewan penguji memberikan ACC revisi.'], 422);
+        }
+
+        $revisi->update([
+            'pengesahan_kaprodi' => true,
+            'disahkan_kaprodi_at' => now()
+        ]);
+
+        $tesis = $revisi->sidang->pengajuanTesis;
+        $tahap = $revisi->sidang->tahap_sidang;
+
+        $targetTahap = match ($tahap) {
+            'sempro' => 'tahap_3_semhas',
+            'semhas' => 'tahap_4_ujian',
+            'ujian'  => 'selesai_yudisium',
+            default  => null,
+        };
+
+        if ($targetTahap) {
+            // Ditegakkan lewat LifecycleStateMachine::transition() (bukan update()
+            // langsung) supaya canTransitionTo() ikut memvalidasi ulang prasyarat
+            // sebelum status_tahap benar-benar berpindah — satu titik kebenaran
+            // untuk seluruh state machine, bukan hanya gate saat pendaftaran.
+            try {
+                LifecycleStateMachine::transition($tesis, $targetTahap);
+            } catch (\Exception $e) {
+                return response()->json(['status' => 'error', 'message' => $e->getMessage()], 422);
+            }
+        }
+
+        AuditLogger::log(
+            $request->user(),
+            'revisi.pengesahanKaprodi',
+            'RevisiDokumen',
+            $revisi->id,
+            "Kaprodi mengesahkan revisi {$tesis->mahasiswa?->name} — status berpindah ke {$targetTahap}.",
+            ['tahap_sebelumnya' => $tahap, 'tahap_baru' => $targetTahap]
+        );
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Revisi disahkan Kaprodi. Status tahapan akademik berhasil diperbarui.',
+            'data' => $tesis
+        ]);
+    }
+}

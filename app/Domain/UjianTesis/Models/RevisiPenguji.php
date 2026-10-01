@@ -1,0 +1,30 @@
+<?php
+
+namespace App\Domain\UjianTesis\Models;
+
+use App\Models\User;
+
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Model;
+
+class RevisiPenguji extends Model
+{
+    use HasUuids;
+
+    protected $table = 'revisi_pengujis';
+    protected $guarded = [];
+
+    protected $casts = [
+        'acc_at' => 'datetime',
+    ];
+
+    public function revisiDokumen()
+    {
+        return $this->belongsTo(RevisiDokumen::class, 'revisi_dokumen_id');
+    }
+
+    public function dosenPenguji()
+    {
+        return $this->belongsTo(User::class, 'dosen_penguji_id');
+    }
+}
