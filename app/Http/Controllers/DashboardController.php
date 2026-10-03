@@ -7,6 +7,7 @@ use App\Domain\Pembimbing\Models\PengajuanTesis;
 use App\Domain\Sidang\Models\AktivitasSidang;
 use App\Domain\Sidang\Models\PengujiSidang;
 use App\Domain\UjianTesis\Models\RevisiDokumen;
+use App\Domain\UjianTesis\Models\RevisiPenguji;
 use App\Models\AuditLog;
 use App\Models\User;
 use App\Domain\StateEngine\Models\StateTransitionLog;
@@ -102,7 +103,7 @@ class DashboardController extends Controller
         $myPengajuan = PengajuanTesis::with([
             'pembimbing1', 'pembimbing2', 'usulanPembimbing1', 'usulanPembimbing2', 'stateTransitionLogs',
             'pendaftaranSempro', 'pendaftaranSemhas', 'pendaftaranUjian',
-            'aktivitasSidangs.pengujiSidangs.dosen', 'aktivitasSidangs.manajemenNilai',
+            'aktivitasSidangs.pengujiSidangs.dosen', 'aktivitasSidangs.manajemenNilai', 'aktivitasSidangs.revisiDokumen',
         ])->where('mahasiswa_id', $user->id)->first();
 
         return ['myPengajuan' => $myPengajuan];
@@ -127,7 +128,16 @@ class DashboardController extends Controller
             ->whereHas('sidang', fn ($q) => $q->where('waktu_mulai', '>=', now()->subDays(30)))
             ->get();
 
-        return ['myBimbingan' => $myBimbingan, 'myTugasPenguji' => $myTugasPenguji];
+        // FR-10: baris matriks revisi yang menunggu ACC dosen ini —
+        // SEBELUMNYA kartu "Revisi yang Menunggu ACC Saya" di dashboard
+        // dosen selalu kosong karena key ini tidak pernah diisi dari sini,
+        // padahal view-nya sudah lama mengharapkan $myRevisiPending.
+        $myRevisiPending = RevisiPenguji::with(['revisiDokumen.sidang.pengajuanTesis.mahasiswa'])
+            ->where('dosen_penguji_id', $user->id)
+            ->where('status_acc', 'pending')
+            ->get();
+
+        return ['myBimbingan' => $myBimbingan, 'myTugasPenguji' => $myTugasPenguji, 'myRevisiPending' => $myRevisiPending];
     }
 
     /**

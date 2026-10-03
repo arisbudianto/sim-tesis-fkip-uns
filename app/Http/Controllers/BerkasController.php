@@ -66,6 +66,15 @@ class BerkasController extends Controller
 
         $path = $stored;
         if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            // Link eksternal (Google Drive, dsb) milik DOMAIN LAIN — biarkan
+            // apa adanya, jangan dipaksa jadi path storage lokal (berkas ini
+            // tidak pernah di-upload ke server kita sama sekali).
+            $host = parse_url($path, PHP_URL_HOST);
+            $appHost = parse_url(config('app.url'), PHP_URL_HOST);
+            if ($host && $appHost && strcasecmp($host, $appHost) !== 0) {
+                return $path;
+            }
+
             $parsed = parse_url($path, PHP_URL_PATH) ?: $path;
             $path = $parsed;
         }

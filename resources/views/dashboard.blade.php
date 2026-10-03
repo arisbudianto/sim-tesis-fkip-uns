@@ -130,7 +130,7 @@
         </div>
     @endif
 
-    @if($tahapAktif === 'audit_log' && in_array(Auth::user()->role, ['komisi_tesis', 'kaprodi', 'admin_prodi']))
+    @if($tahapAktif === 'audit_log' && in_array(Auth::user()->role, ['komisi_tesis', 'admin_prodi']))
         <div class="flex flex-col gap-4">
             @include('dashboard.tabs.audit')
         </div>

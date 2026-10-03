@@ -76,16 +76,26 @@
                     Data Master
                 </a>
                 @endif
+                @if($navUser->hasAnyRole(['komisi_tesis', 'admin_prodi']))
                 <a href="{{ route('dashboard', ['tahap' => 'audit_log']) }}"
                    class="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] mb-1 transition-colors
                           {{ $navTahapAktif === 'audit_log' ? 'bg-slate-100 text-primary-900 font-extrabold' : 'text-slate-600 font-semibold hover:bg-slate-50 hover:text-primary-800' }}">
                     <x-ui.icon name="clipboard-list" class="h-[18px] w-[18px] shrink-0" />
                     Audit Log & Histori
                 </a>
+                @endif
             @endif
         @endif
 
         <div class="text-[10px] font-extrabold uppercase tracking-[0.12em] text-primary-700/70 px-3 mt-5 mb-2">Lainnya</div>
+        @auth
+        <a href="{{ route('profile.edit') }}"
+           class="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] mb-1 transition-colors
+                  {{ request()->routeIs('profile.*') ? 'bg-slate-100 text-primary-900 font-extrabold' : 'text-slate-600 font-semibold hover:bg-slate-50 hover:text-primary-800' }}">
+            <x-ui.icon name="pencil-square" class="h-[18px] w-[18px] shrink-0" />
+            Edit Profil Saya
+        </a>
+        @endauth
         <a href="{{ route('public.index') }}"
            class="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] mb-1 transition-colors
                   {{ request()->routeIs('public.index') ? 'bg-slate-100 text-primary-900 font-extrabold' : 'text-slate-600 font-semibold hover:bg-slate-50 hover:text-primary-800' }}">
@@ -104,13 +114,15 @@
     <div class="border-t border-slate-200 p-3.5">
         @auth
             <div class="flex items-center gap-2.5 rounded-xl px-2 py-2 mb-1.5">
-                <span class="flex items-center justify-center h-8 w-8 rounded-full bg-slate-100 text-primary-800 shrink-0">
-                    <x-ui.icon name="user-circle" class="h-5 w-5" />
-                </span>
-                <div class="min-w-0">
-                    <div class="text-[12.5px] font-bold text-primary-900 truncate">{{ Auth::user()->name }}</div>
-                    <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">{{ str_replace('_', ' ', Auth::user()->role) }}</div>
-                </div>
+                <a href="{{ route('profile.edit') }}" title="Edit Profil Saya" class="flex items-center gap-2.5 min-w-0 flex-1 rounded-lg -mx-1 px-1 py-0.5 hover:bg-slate-50 transition-colors">
+                    <span class="flex items-center justify-center h-8 w-8 rounded-full bg-slate-100 text-primary-800 shrink-0">
+                        <x-ui.icon name="user-circle" class="h-5 w-5" />
+                    </span>
+                    <div class="min-w-0">
+                        <div class="text-[12.5px] font-bold text-primary-900 truncate">{{ Auth::user()->name }}</div>
+                        <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">{{ str_replace('_', ' ', Auth::user()->role) }}</div>
+                    </div>
+                </a>
                 <form action="{{ route('logout') }}" method="POST" class="ml-auto">
                     @csrf
                     <button type="submit" title="Keluar" class="p-2 rounded-lg text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-colors">

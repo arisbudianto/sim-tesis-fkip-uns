@@ -62,6 +62,7 @@ class WhatsAppNotifierService
     {
         $url = config('whatsapp.url');
         $token = config('whatsapp.token');
+        $secret = config('whatsapp.secret');
 
         if (!$url || !$token) {
             $log->update([
@@ -72,11 +73,28 @@ class WhatsAppNotifierService
             return $log;
         }
 
+        if (!$secret) {
+            $log->update([
+                'status' => 'gagal',
+                'error_message' => 'WHATSAPP_API_SECRET belum dikonfigurasi di .env — Wablas WAJIB mengirim Token + Secret Key sekaligus, request akan ditolak Wablas kalau cuma token.',
+            ]);
+            Log::info('[WhatsAppNotifier] Dilewati: WHATSAPP_API_SECRET belum diisi.', ['log_id' => $log->id]);
+            return $log;
+        }
+
         try {
-            $response = Http::withToken($token)
+            // Otentikasi Wablas BUKAN Bearer token biasa — formatnya
+            // "{token}.{secret_key}" sebagai nilai mentah header
+            // Authorization (tanpa prefiks "Bearer "), dan body-nya
+            // form-encoded dengan field "phone" (bukan "target"/JSON),
+            // sesuai dokumentasi resmi Wablas.
+            $response = Http::withHeaders([
+                    'Authorization' => "{$token}.{$secret}",
+                ])
+                ->asForm()
                 ->timeout(10)
                 ->post($url, [
-                    'target' => self::normalisasiNomor($log->nomor_tujuan),
+                    'phone' => self::normalisasiNomor($log->nomor_tujuan),
                     'message' => $log->pesan_terkirim,
                 ]);
 

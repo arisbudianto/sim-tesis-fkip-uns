@@ -55,6 +55,40 @@ class NotifikasiTemplateSeeder extends Seeder
                     . "Silakan cek SIM-TESIS untuk detail & langkah selanjutnya.\n\n"
                     . "Selamat!\nKomisi Tesis FKIP UNS",
             ],
+
+            // FR-10: Matriks Revisi Pasca Ujian — 3 template baru, dikirim
+            // pada tiap perpindahan tahap alur revisi (diajukan mahasiswa ->
+            // di-ACC/ditolak tiap penguji -> disahkan Kaprodi), supaya pola
+            // notifikasinya konsisten dengan Sempro/Semhas/Ujian Tesis yang
+            // sudah lebih dulu memakai WA Blast di setiap transisi status.
+            [
+                'key' => 'revisi_diajukan',
+                'nama_template' => 'Matriks Revisi Diajukan (ke Dewan Penguji)',
+                'deskripsi_placeholder' => '{nama_dosen} {nama_mahasiswa} {tahap_sidang} {link_revisi}',
+                'body' => "Yth. {nama_dosen},\n\n"
+                    . "{nama_mahasiswa} telah mengajukan matriks perbaikan naskah pasca sidang {tahap_sidang}.\n\n"
+                    . "Mohon tinjau & berikan ACC/catatan perbaikan di: {link_revisi}\n\n"
+                    . "Terima kasih.\nSIM-TESIS FKIP UNS",
+            ],
+            [
+                'key' => 'revisi_perlu_perbaikan',
+                'nama_template' => 'Revisi Perlu Diperbaiki Lagi (ke Mahasiswa)',
+                'deskripsi_placeholder' => '{nama_mahasiswa} {nama_dosen} {tahap_sidang} {feedback_penguji} {link_revisi}',
+                'body' => "Yth. {nama_mahasiswa},\n\n"
+                    . "{nama_dosen} meminta perbaikan tambahan pada matriks revisi {tahap_sidang} Anda.\n\n"
+                    . "Catatan: {feedback_penguji}\n\n"
+                    . "Silakan perbarui matriks revisi Anda di: {link_revisi}\n\n"
+                    . "Terima kasih.\nSIM-TESIS FKIP UNS",
+            ],
+            [
+                'key' => 'revisi_disahkan',
+                'nama_template' => 'Revisi Disahkan Kaprodi (ke Mahasiswa)',
+                'deskripsi_placeholder' => '{nama_mahasiswa} {tahap_sidang} {status_lanjutan}',
+                'body' => "Yth. {nama_mahasiswa},\n\n"
+                    . "Revisi naskah {tahap_sidang} Anda sudah disahkan Kaprodi.\n\n"
+                    . "{status_lanjutan}\n\n"
+                    . "Selamat!\nKomisi Tesis FKIP UNS",
+            ],
         ];
 
         foreach ($templates as $t) {

@@ -218,10 +218,16 @@ class PendaftaranSemproController extends Controller
     }
 
     /**
-     * Komisi Tesis / Admin / Kaprodi mengedit HANYA:
+     * Komisi Tesis / Admin / Kaprodi mengedit:
+     * - judul proposal, bidang fokus, abstrak rencana (data pengajuan tesis
+     *   milik mahasiswa — sebelumnya HANYA bisa diubah lewat menu Pengajuan,
+     *   dan itu pun terkunci begitu mahasiswa lewat Tahap 1/Bimbingan,
+     *   sehingga tidak ada cara memperbaiki typo judul dkk setelah mahasiswa
+     *   sudah mendaftar Sempro — makanya dibuka juga di sini),
      * - hari/tanggal (jadwal usulan + waktu sidang),
      * - penguji eksternal (Ketua & Sekretaris).
-     * Pembimbing utama & pendamping TIDAK boleh diubah dari form ini.
+     * Pembimbing utama & pendamping TIDAK boleh diubah dari form ini (tetap
+     * lewat menu Pengajuan supaya tercatat lewat StateEngine).
      */
     public function update(Request $request, $id)
     {
@@ -231,9 +237,19 @@ class PendaftaranSemproController extends Controller
         $tesis = $sempro->pengajuanTesis;
 
         $validated = $request->validate([
+            'judul_tesis' => 'required|string|max:500',
+            'bidang_fokus' => 'required|string|max:255',
+            'abstrak_rencana' => 'nullable|string',
             'jadwal_usulan_sidang' => 'required|date',
+            'ruangan' => 'nullable|string|max:255',
+            'link_zoom' => 'nullable|string|max:500',
             'ketua_penguji_id' => 'nullable|uuid|exists:users,id',
             'sekretaris_penguji_id' => 'nullable|uuid|exists:users,id',
+            // Komisi Tesis boleh mengisikan/mengganti naskah proposal atas
+            // nama mahasiswa dari sini — berupa LINK (Google Drive/cloud
+            // lain), bukan upload file, supaya tidak kena batas ukuran
+            // upload PHP/hosting (penyebab 500 saat upload file besar).
+            'naskah_proposal_url' => 'nullable|url|max:1000',
         ]);
 
         if (!empty($validated['ketua_penguji_id']) && $validated['ketua_penguji_id'] === ($validated['sekretaris_penguji_id'] ?? null)) {
@@ -246,9 +262,21 @@ class PendaftaranSemproController extends Controller
             }
         }
 
-        $sempro->update([
-            'jadwal_usulan_sidang' => $validated['jadwal_usulan_sidang'],
+        // Judul/bidang fokus/abstrak milik PengajuanTesis, bukan PendaftaranSempro
+        // — diupdate terpisah dari jadwal sempro di bawah.
+        $tesis->update([
+            'judul_tesis' => $validated['judul_tesis'],
+            'bidang_fokus' => $validated['bidang_fokus'],
+            'abstrak_rencana' => $validated['abstrak_rencana'] ?? null,
         ]);
+
+        $dataSempro = [
+            'jadwal_usulan_sidang' => $validated['jadwal_usulan_sidang'],
+        ];
+        if (!empty($validated['naskah_proposal_url'])) {
+            $dataSempro['naskah_proposal_url'] = $validated['naskah_proposal_url'];
+        }
+        $sempro->update($dataSempro);
 
         $waktuMulai = Carbon::parse($validated['jadwal_usulan_sidang']);
         $waktuSelesai = $waktuMulai->copy()->addHours(2);
@@ -278,8 +306,23 @@ class PendaftaranSemproController extends Controller
 
         $sidang->waktu_mulai = $waktuMulai;
         $sidang->waktu_selesai = $waktuSelesai;
+        // Ruangan/Link Zoom boleh diisi/diubah di sini — dulu cuma bisa diisi
+        // sekali lewat form Plotting Jadwal, sekarang Komisi Tesis bisa
+        // memperbaikinya kapan pun lewat Edit Data Sempro ini juga.
+        // PENTING: Ruangan dikosongkan artinya memang daring (dipakai Link
+        // Zoom), BUKAN "pakai nilai lama" — kalau tidak begini, field yang
+        // dikosongkan selalu balik ke "TBA" dan tidak pernah bisa benar-benar
+        // kosong. "TBA" cuma dipakai sebagai fallback kalau Ruangan MAUPUN
+        // Link Zoom sama-sama kosong, supaya tidak ada sidang tanpa info
+        // lokasi sama sekali.
+        $ruangan = $validated['ruangan'] ?? null;
+        $linkZoom = $validated['link_zoom'] ?? null;
+        if (!filled($ruangan) && !filled($linkZoom)) {
+            $ruangan = 'TBA';
+        }
+        $sidang->ruangan = $ruangan;
+        $sidang->link_zoom = $linkZoom;
         if (!$sidang->exists) {
-            $sidang->ruangan = $sidang->ruangan ?: 'TBA';
             $sidang->komisi_tesis_id = $request->user()->id;
             $sidang->is_locked = false;
         }
@@ -301,8 +344,10 @@ class PendaftaranSemproController extends Controller
             'sempro.update',
             'PendaftaranSempro',
             $sempro->id,
-            "Jadwal/penguji Sempro {$tesis->mahasiswa?->name} diperbarui. Pembimbing tetap.",
+            "Judul/data proposal & jadwal/penguji Sempro {$tesis->mahasiswa?->name} diperbarui. Pembimbing tetap.",
             [
+                'judul_tesis' => $validated['judul_tesis'],
+                'bidang_fokus' => $validated['bidang_fokus'],
                 'jadwal_usulan_sidang' => $validated['jadwal_usulan_sidang'],
                 'ketua_penguji_id' => $validated['ketua_penguji_id'] ?? null,
                 'sekretaris_penguji_id' => $validated['sekretaris_penguji_id'] ?? null,
@@ -313,7 +358,7 @@ class PendaftaranSemproController extends Controller
             return response()->json(['status' => 'success', 'data' => $sempro->fresh()]);
         }
 
-        return redirect()->route('dashboard')->with('success', 'Jadwal dan penguji Sempro berhasil diperbarui. Pembimbing utama & pendamping tidak diubah.');
+        return redirect()->route('dashboard')->with('success', 'Data proposal, jadwal, dan penguji Sempro berhasil diperbarui. Pembimbing utama & pendamping tidak diubah.');
     }
 
     protected function syncPengujiTetap(AktivitasSidang $sidang, string $peran, ?string $dosenId): void

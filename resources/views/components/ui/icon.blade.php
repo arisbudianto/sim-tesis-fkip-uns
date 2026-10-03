@@ -83,5 +83,16 @@
         @case('x-mark')
             <path d="M6 6l12 12M18 6 6 18" />
             @break
+
+        @case('pencil-square')
+            <path d="M14.5 5.5 18.5 9.5 8 20H4v-4L14.5 5.5Z" />
+            <path d="M12.5 7.5l4 4" />
+            @break
+
+        @case('lock-closed')
+            <rect x="5.5" y="10.5" width="13" height="9" rx="1.6" />
+            <path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" />
+            <circle cx="12" cy="14.8" r="1.3" />
+            @break
     @endswitch
 </svg>

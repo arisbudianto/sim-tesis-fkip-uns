@@ -55,6 +55,38 @@
         @endif
     </x-ui.card>
 
+    @php
+        // FR-10: begitu sidang tahap aktif sudah dinilai Komisi Tesis
+        // (manajemenNilai terisi) dan keputusannya bukan Ujian Ulang,
+        // mahasiswa wajib mengajukan matriks revisi SEBELUM status_tahap
+        // bisa berpindah ke tahap berikutnya (lihat RevisiDokumenController::
+        // pengesahanKaprodi) — sebelumnya tidak ada entry point untuk ini
+        // sama sekali di dashboard mahasiswa.
+        $tahapSidangAktif = ['tahap_2_sempro' => 'sempro', 'tahap_3_semhas' => 'semhas', 'tahap_4_ujian' => 'ujian'][$tahap] ?? null;
+        $sidangAktif = $tahapSidangAktif
+            ? $myPengajuan->aktivitasSidangs->firstWhere('tahap_sidang', $tahapSidangAktif)
+            : null;
+    @endphp
+    @if($sidangAktif && $sidangAktif->manajemenNilai && $sidangAktif->manajemenNilai->keputusan_sidang !== 'ujian_ulang')
+        @php $revisiSidangAktif = $sidangAktif->revisiDokumen; @endphp
+        <x-ui.card title="Revisi Pasca Sidang" subtitle="Nilai sudah direkap Komisi Tesis — lanjutkan dengan mengajukan matriks revisi ke dewan penguji.">
+            @if($revisiSidangAktif?->pengesahan_kaprodi)
+                <x-ui.badge color="green">Revisi sudah disahkan Kaprodi — menunggu status tahap berpindah otomatis.</x-ui.badge>
+            @elseif($revisiSidangAktif?->status_approval_semua)
+                <x-ui.badge color="blue">Seluruh dewan penguji sudah ACC — menunggu pengesahan Kaprodi.</x-ui.badge>
+            @elseif($revisiSidangAktif)
+                <x-ui.badge color="yellow">Matriks revisi sudah diajukan — menunggu ACC dewan penguji.</x-ui.badge>
+            @else
+                <x-ui.badge color="yellow">Matriks revisi belum diajukan.</x-ui.badge>
+            @endif
+            <div class="mt-3">
+                <a href="{{ route('revisi.index', $sidangAktif->id) }}" class="ui-btn ui-btn-primary">
+                    {{ $revisiSidangAktif ? 'Lihat / Perbarui Matriks Revisi' : 'Ajukan Matriks Revisi' }}
+                </a>
+            </div>
+        </x-ui.card>
+    @endif
+
     <x-ui.card title="Riwayat Proses per Tahap" subtitle="Histori lengkap transisi status (bisa diaudit).">
         <div class="overflow-x-auto -mx-1">
             <table class="ui-table">

@@ -30,7 +30,15 @@
             <x-ui.info-row label="Mahasiswa">{{ $s->pengajuanTesis->mahasiswa->name ?? '-' }} ({{ $s->pengajuanTesis->mahasiswa->identifier ?? '' }})</x-ui.info-row>
             <x-ui.info-row label="Judul">{{ $s->pengajuanTesis->judul_tesis ?? '-' }}</x-ui.info-row>
             <x-ui.info-row label="Jadwal">{{ optional($s->waktu_mulai)->format('d/m/Y H:i') }} – {{ optional($s->waktu_selesai)->format('H:i') }}</x-ui.info-row>
-            <x-ui.info-row label="Ruang">{{ $s->ruangan ?? 'TBA' }}</x-ui.info-row>
+            <x-ui.info-row label="Ruang">
+                @if(filled($s->ruangan))
+                    {{ $s->ruangan }}
+                @elseif(filled($s->link_zoom))
+                    Daring — <a href="{{ $s->link_zoom }}" target="_blank" class="text-primary-700 underline">{{ $s->link_zoom }}</a>
+                @else
+                    TBA
+                @endif
+            </x-ui.info-row>
         </x-ui.card>
 
         @if(session('success'))
@@ -42,6 +50,11 @@
             </x-ui.alert>
         @endif
 
+        {{-- Dua kartu di bawah TIDAK saling eksklusif — sengaja dipisah jadi
+        2 blok @if terpisah (bukan @if/@else) supaya orang yang berperan
+        GANDA (mis. Komisi Tesis yang juga tercatat sebagai Pembimbing/
+        penguji eksternal di sidang ini) tetap melihat form isi nilai
+        miliknya sendiri, bukan cuma tampilan rekap. --}}
         @if($isPengendali)
             <x-ui.card title="Ringkasan nilai penguji" subtitle="Detail per indikator hanya dapat diubah oleh dosen penguji yang bersangkutan.">
                 <div class="overflow-x-auto -mx-1">
@@ -83,8 +96,6 @@
                 @unless($semuaSudahNilai)
                     <x-ui.alert type="warning">
                         Form rekap belum aktif karena masih ada penguji yang belum menyimpan nilai.
-                        Angka 85 di form penguji hanya nilai bawaan tampilan — belum tersimpan sebelum tombol
-                        <strong>Simpan Nilai</strong> ditekan oleh dosen penguji.
                         <ul class="list-disc pl-4 mt-2">
                             @foreach($s->pengujiSidangs->whereNull('nilai_total_angka') as $ps)
                                 <li>{{ $ps->dosen->name ?? 'Penguji' }} ({{ str_replace('_', ' ', $ps->peran_penguji) }})</li>
@@ -132,7 +143,9 @@
                     </div>
                 </form>
             </x-ui.card>
-        @else
+        @endif
+
+        @if($isDosenPenguji)
             @foreach($s->pengujiSidangs as $ps)
                 @continue(Auth::id() !== $ps->dosen_id)
                 @php $sudahAdaNilai = $ps->nilai_total_angka !== null; @endphp
@@ -145,8 +158,8 @@
                     <form action="{{ route('sidang.submitNilai', $s->id) }}" method="POST" class="flex flex-col gap-3">
                         @csrf
                         <input type="hidden" name="dosen_id" value="{{ $ps->dosen_id }}">
-                        <div class="flex flex-wrap gap-2">
-                            @if($pakai4Dimensi)
+                        @if($pakai4Dimensi)
+                            <div class="flex flex-wrap gap-2">
                                 @foreach([
                                     'nilai_dimensi_1_naskah' => 'I Naskah',
                                     'nilai_dimensi_2_publikasi' => 'II Publikasi',
@@ -155,20 +168,45 @@
                                 ] as $kolom => $label)
                                     <label class="flex flex-col gap-1 min-w-[120px] flex-1">
                                         <span class="text-[11px] font-bold text-slate-500">{{ $label }}</span>
-                                        <input type="number" name="{{ $kolom }}" min="0" max="100" step="1" required
-                                               value="{{ $ps->{$kolom} ?? 85 }}" class="ui-input text-center">
+                                        <input type="number" name="{{ $kolom }}" min="0" max="100" step="1" required placeholder="0"
+                                               value="{{ $ps->{$kolom} ?? '' }}" class="ui-input text-center">
                                     </label>
                                 @endforeach
-                            @else
-                                @for($i = 1; $i <= 10; $i++)
-                                    <label class="flex flex-col gap-1 w-[4.5rem]">
-                                        <span class="text-[10px] font-bold text-slate-400" title="{{ config('penilaian.label_indikator.'.$i) }}">I{{ $i }}</span>
-                                        <input type="number" name="nilai_indikator_{{ $i }}" min="0" max="100" step="1" required
-                                               value="{{ $ps->{'nilai_indikator_'.$i} ?? 85 }}" class="ui-input !px-1 text-center">
-                                    </label>
-                                @endfor
-                            @endif
-                        </div>
+                            </div>
+                        @else
+                            {{-- Tabel rubrik PERSIS form resmi FPT-TI-03: No | Aspek Penilaian |
+                            Uraian | Nilai (0-100), dikelompokkan per aspek (bukan kotak "I1..I10"
+                            yang tidak jelas artinya apa tanpa buka dokumen cetak). --}}
+                            <div class="overflow-x-auto -mx-1">
+                                <table class="ui-table">
+                                    <thead>
+                                        <tr>
+                                            <th class="w-10">No</th>
+                                            <th>Aspek Penilaian</th>
+                                            <th>Uraian</th>
+                                            <th class="w-28">Nilai (0-100)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach(config('penilaian.aspek_indikator') as $aspek => $nomorIndikator)
+                                            @foreach($nomorIndikator as $idx => $i)
+                                                <tr>
+                                                    <td class="text-center text-[12px]">{{ $idx + 1 }}</td>
+                                                    @if($idx === 0)
+                                                        <td class="font-semibold text-[12.5px]" rowspan="{{ count($nomorIndikator) }}">{{ $aspek }}</td>
+                                                    @endif
+                                                    <td class="text-[12.5px]">{{ config('penilaian.label_indikator.'.$i) }}</td>
+                                                    <td>
+                                                        <input type="number" name="nilai_indikator_{{ $i }}" min="0" max="100" step="1" required placeholder="0"
+                                                               value="{{ $ps->{'nilai_indikator_'.$i} ?? '' }}" class="ui-input text-center">
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @endif
                         <div class="ui-field !mb-0">
                             <label class="ui-label">Catatan / saran revisi</label>
                             <textarea name="catatan_revisi" rows="2" class="ui-input" placeholder="Opsional">{{ $ps->catatan_revisi }}</textarea>
@@ -179,11 +217,6 @@
                             </button>
                         </div>
                     </form>
-                    @unless($pakai4Dimensi)
-                        <p class="text-[11px] text-slate-400 mt-3">
-                            I1=Kejelasan Latar Belakang &amp; Rumusan Masalah · I2=Ketajaman Tinjauan Pustaka · I3=Ketepatan Kerangka Berpikir · I4=Kesesuaian Metodologi · I5=Orisinalitas · I6=Sistematika &amp; Tata Bahasa · I7=Kejelasan Penyajian · I8=Penguasaan Materi · I9=Kemampuan Menjawab · I10=Sikap &amp; Profesionalisme
-                        </p>
-                    @endunless
                 </x-ui.card>
             @endforeach
         @endif

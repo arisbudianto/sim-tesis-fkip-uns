@@ -24,17 +24,28 @@ return [
     | maupun Ujian Tesis — templatenya generik, bobot sama rata 10% per
     | indikator supaya sederhana dan mudah diaudit Komisi Tesis.
     */
+    // Label & pengelompokan SAMA PERSIS dengan form resmi FPT-TI-03
+    // ("PENILAIAN UJIAN TESIS 1 — SEMINAR DAN UJIAN PROPOSAL"): 10 indikator
+    // terbagi 2 aspek — I. Kualitas Rencana Penelitian (indikator 1-7) dan
+    // II. Kualitas Presentasi (indikator 8-10). Dipakai juga untuk Semhas &
+    // Ujian Tesis supaya satu rubrik generik, tapi label & pengelompokan
+    // aspeknya mengikuti dokumen resmi Sempro.
+    'aspek_indikator' => [
+        'I. Kualitas Rencana Penelitian' => [1, 2, 3, 4, 5, 6, 7],
+        'II. Kualitas Presentasi' => [8, 9, 10],
+    ],
+
     'label_indikator' => [
-        1  => 'Kejelasan Latar Belakang & Rumusan Masalah',
-        2  => 'Ketajaman Tinjauan Pustaka / Kajian Teori',
-        3  => 'Ketepatan Kerangka Berpikir / Hipotesis',
-        4  => 'Kesesuaian & Kelayakan Metodologi Penelitian',
-        5  => 'Orisinalitas & Kontribusi Keilmuan',
-        6  => 'Sistematika Penulisan & Tata Bahasa',
-        7  => 'Kejelasan Penyajian / Presentasi',
-        8  => 'Penguasaan Materi',
-        9  => 'Kemampuan Menjawab Pertanyaan',
-        10 => 'Sikap & Profesionalisme Akademik',
+        1  => 'Bahasa, ketepatan, dan kejelasan redaksi',
+        2  => 'Sistematika dan format penulisan',
+        3  => 'Perumusan masalah dan tujuan penelitian',
+        4  => 'Kedalaman kajian teori',
+        5  => 'Metodologi penelitian',
+        6  => 'Keaslian dan kebaruan penelitian',
+        7  => 'Kemanfaatan penelitian',
+        8  => 'Efektivitas presentasi proposal',
+        9  => 'Kemampuan menangkap dan menjawab pertanyaan',
+        10 => 'Kedalaman dan keluasan wawasan keilmuan',
     ],
 
     'bobot_indikator' => [

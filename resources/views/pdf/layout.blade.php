@@ -34,9 +34,14 @@
 <body>
 
 @php
-    $kopPath = public_path('assets/kop-fkip-pgv.png');
+    // $kopAsset memungkinkan tiap jenis dokumen memakai gambar kop surat
+    // sendiri (mis. 'kop-undangan' untuk Undangan, dengan desain resmi UNS
+    // lengkap warna kuning-biru) tanpa mengubah kop dokumen lain yang masih
+    // memakai kop generik 'kop-fkip-pgv'.
+    $namaAsetKop = $kopAsset ?? 'kop-fkip-pgv';
+    $kopPath = public_path("assets/{$namaAsetKop}.png");
     if (!file_exists($kopPath)) {
-        $kopPath = public_path('assets/kop-fkip-pgv.jpg');
+        $kopPath = public_path("assets/{$namaAsetKop}.jpg");
     }
     $kopBase64 = file_exists($kopPath) ? base64_encode(file_get_contents($kopPath)) : null;
 @endphp
@@ -64,12 +69,20 @@
 </div>
 @endif
 
+@if($tampilkanJudul ?? true)
 <div class="form-title">{{ strtoupper($judul) }}</div>
+@endif
 
 {{-- konten spesifik tiap dokumen --}}
 @yield('konten')
 
-@if(($tampilkanQr ?? true) && !empty($qrBase64))
+{{--
+    $qrDitaruhDiKonten = true dipakai dokumen yang menaruh QR sendiri di
+    posisi tertentu di dalam @section('konten') (mis. Undangan — QR persis
+    di bawah label "Ketua Program Studi", menyatu dengan blok tanda tangan),
+    supaya tidak dobel dengan blok QR generik di bawah ini.
+--}}
+@if(($tampilkanQr ?? true) && !empty($qrBase64) && !($qrDitaruhDiKonten ?? false))
 <table style="margin-top: 18px;">
 <tr>
     <td style="width: 78%; vertical-align: bottom;">
@@ -78,6 +91,23 @@
     <td style="width: 22%;" class="qr-box">
         <img src="data:image/png;base64,{{ $qrBase64 }}" alt="QR Verifikasi">
         <div class="qr-caption">Scan untuk verifikasi keaslian dokumen (TTE)<br>Hash: {{ substr($hashVerifikasi, 0, 16) }}&hellip;</div>
+    </td>
+</tr>
+</table>
+@endif
+
+@if(!empty($footerLegalText))
+<table class="footer-legal-table" style="margin-top: 26px;">
+<tr>
+    <td style="width: 10%; vertical-align: top;">
+        @if($footerLegalIconBase64 ?? null)
+            <img src="data:image/png;base64,{{ $footerLegalIconBase64 }}" alt="" style="width:40px;">
+        @endif
+    </td>
+    <td style="width: 90%; font-size: 8.5px; color: #555; line-height: 1.5; vertical-align: top;">
+        @foreach($footerLegalText as $baris)
+            {{ $baris }}<br>
+        @endforeach
     </td>
 </tr>
 </table>

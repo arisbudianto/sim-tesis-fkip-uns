@@ -212,6 +212,50 @@ class PengajuanTesisController extends Controller
     }
 
     /**
+     * Edit CEPAT judul proposal / bidang fokus / abstrak dari tab Komisi
+     * Tesis (dipakai di tab Sempro, Semhas, DAN Ujian di dashboard) —
+     * SENGAJA tidak memakai method update() di bawah, karena update()
+     * dikunci hanya untuk status_tahap === 'tahap_1_bimbingan' (didesain
+     * untuk form edit lengkap + alokasi pembimbing yang memang cuma relevan
+     * di Tahap 1). Method ini sebaliknya TIDAK punya gate tahap sama sekali
+     * dan TIDAK menyentuh pembimbing/status_tahap — supaya Komisi Tesis
+     * tetap bisa memperbaiki typo judul dkk kapan pun, termasuk setelah
+     * mahasiswa sudah masuk Sempro/Semhas/Ujian.
+     */
+    public function updateDataProposal(Request $request, $id)
+    {
+        $pengajuan = PengajuanTesis::findOrFail($id);
+
+        $user = $request->user();
+        if (!$this->bolehEditPengajuan($user)) {
+            abort(403, 'Anda tidak berwenang mengubah data proposal ini.');
+        }
+
+        $validated = $request->validate([
+            'judul_tesis' => 'required|string|max:500',
+            'bidang_fokus' => 'required|string|max:255',
+            'abstrak_rencana' => 'nullable|string',
+        ]);
+
+        $pengajuan->update($validated);
+
+        AuditLogger::log(
+            $user,
+            'pengajuan.updateDataProposal',
+            'PengajuanTesis',
+            $pengajuan->id,
+            "Judul/bidang fokus/abstrak proposal {$pengajuan->mahasiswa?->name} diperbarui dari tab Komisi Tesis.",
+            $validated
+        );
+
+        if ($request->wantsJson()) {
+            return response()->json(['status' => 'success', 'data' => $pengajuan->fresh()]);
+        }
+
+        return redirect()->route('dashboard')->with('success', "Judul/data proposal {$pengajuan->mahasiswa?->name} berhasil diperbarui.");
+    }
+
+    /**
      * Form edit pengajuan tesis (hanya untuk data di tahap_1_bimbingan —
      * setelah masuk ke tahap sempro dst, judul/fokus dianggap final).
      */

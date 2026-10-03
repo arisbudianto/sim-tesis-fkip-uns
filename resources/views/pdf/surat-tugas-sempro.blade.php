@@ -1,6 +1,18 @@
 @extends('pdf.layout')
 
 @php
+    // CATATAN PENTING: sejak Sempro bisa punya 3 penguji (Sekretaris Penguji
+    // opsional — lihat KomisiTesisController@createSidangWithPenguji),
+    // $penguji->get('sekretaris_penguji') BISA null untuk sidang Sempro.
+    // Versi sebelumnya dari file ini mengakses ->dosen->name langsung tanpa
+    // operator null-safe (?->) pada SETIAP baris termasuk baris Sekretaris
+    // yang kosong itu — PHP memunculkan warning "Attempt to read property
+    // on null" yang di beberapa konfigurasi PHP ikut tercetak ke output
+    // HTML dan membuat dompdf gagal merender sisa dokumen (PDF jadi kosong
+    // setelah kop+judul, persis seperti dilaporkan). Perbaikan di bawah:
+    // (1) semua akses properti dosen pakai ?-> (null-safe), (2) baris
+    // Sekretaris Penguji otomatis DILEWATI kalau memang belum diisi untuk
+    // Sempro, bukan ditampilkan sebagai baris kosong bertitik-titik.
     $sidang = $record; // AktivitasSidang (tahap_sidang = sempro ATAU semhas)
     $tesis = $sidang->pengajuanTesis;
 
@@ -9,12 +21,18 @@
         : 'Ujian Tesis 1 (Seminar dan Ujian Proposal)';
 
     $penguji = $sidang->pengujiSidangs->keyBy('peran_penguji');
-    $baris = [
+    $baris = collect([
         ['peran' => 'Ketua Penguji', 'ket' => '', 'p' => $penguji->get('ketua_penguji')],
         ['peran' => 'Sekretaris Penguji', 'ket' => '', 'p' => $penguji->get('sekretaris_penguji')],
         ['peran' => 'Anggota 1', 'ket' => 'Pembimbing I', 'p' => $penguji->get('pembimbing_1')],
         ['peran' => 'Anggota 2', 'ket' => 'Pembimbing II', 'p' => $penguji->get('pembimbing_2')],
-    ];
+    ])
+        // Sekretaris Penguji yang kosong pada Sempro memang opsional —
+        // lewati barisnya saja. Untuk peran lain yang seharusnya selalu
+        // terisi, baris tetap ditampilkan dengan placeholder titik-titik
+        // (tanda data belum lengkap) alih-alih disembunyikan diam-diam.
+        ->reject(fn ($b) => $b['peran'] === 'Sekretaris Penguji' && !$b['p'])
+        ->values();
 @endphp
 
 @section('konten')
@@ -35,10 +53,10 @@
 <tr>
     <td>{{ $i + 1 }}</td>
     <td>
-        {{ $b['p']->dosen->name ?? '..........................' }}<br>
-        NIP. {{ $b['p']->dosen->identifier ?? '..........................' }}
+        {{ $b['p']?->dosen?->name ?? '..........................' }}<br>
+        NIP. {{ $b['p']?->dosen?->identifier ?? '..........................' }}
     </td>
-    <td>{{ $b['p']->dosen->pangkat_golongan ?? '-' }}</td>
+    <td>{{ $b['p']?->dosen?->pangkat_golongan ?? '-' }}</td>
     <td>{{ $b['peran'] }}</td>
     <td>{{ $b['ket'] }}</td>
 </tr>
@@ -48,16 +66,16 @@
 <table class="content-table" style="margin-top:14px;">
 <tr><th style="width:15%;">Acara</th><td>{{ $labelAcara }}</td></tr>
 <tr><th>Tempat</th><td>{{ $sidang->ruangan ?? $sidang->link_zoom ?? '-' }}</td></tr>
-<tr><th>Tanggal</th><td>{{ $sidang->waktu_mulai->translatedFormat('l, d F Y') }}</td></tr>
-<tr><th>Waktu</th><td>{{ $sidang->waktu_mulai->format('H:i') }} &ndash; {{ $sidang->waktu_selesai->format('H:i') }} WIB</td></tr>
+<tr><th>Tanggal</th><td>{{ $sidang->waktu_mulai?->translatedFormat('l, d F Y') ?? '-' }}</td></tr>
+<tr><th>Waktu</th><td>{{ $sidang->waktu_mulai?->format('H:i') ?? '-' }} &ndash; {{ $sidang->waktu_selesai?->format('H:i') ?? '-' }} WIB</td></tr>
 <tr>
     <th>Tugas</th>
     <td>
         Menguji {{ $labelAcara }} Fakultas Keguruan dan Ilmu Pendidikan Universitas Sebelas Maret yakni :<br><br>
-        Nama : {{ $tesis->mahasiswa->name }}<br>
-        NIM : {{ $tesis->mahasiswa->identifier }}<br>
+        Nama : {{ $tesis?->mahasiswa?->name ?? '-' }}<br>
+        NIM : {{ $tesis?->mahasiswa?->identifier ?? '-' }}<br>
         Prodi : S2 Pendidikan Guru Vokasi<br>
-        Judul Tesis : {{ $tesis->judul_tesis }}
+        Judul Tesis : {{ $tesis?->judul_tesis ?? '-' }}
     </td>
 </tr>
 </table>

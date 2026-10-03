@@ -44,6 +44,10 @@ class PenggunaController extends Controller
             'name' => 'required|string|max:255',
             'identifier' => 'required|string|max:50|unique:users,identifier',
             'email' => 'required|string|email|max:255|unique:users,email',
+            // Nomor WA dipakai WhatsAppNotifierService untuk mengirim
+            // notifikasi "jadwal_terkunci" ke mahasiswa — tanpa ini WA Blast
+            // akan selalu gagal dengan pesan "nomor WA kosong".
+            'nomor_wa' => 'nullable|string|max:20',
         ]);
 
         $user = User::create([
@@ -51,6 +55,7 @@ class PenggunaController extends Controller
             'name' => $validated['name'],
             'identifier' => $validated['identifier'],
             'email' => $validated['email'],
+            'nomor_wa' => $validated['nomor_wa'] ?? null,
             'password' => Hash::make('user123'),
             'role' => 'mahasiswa',
             'kuota_bimbingan_maks' => 0,
@@ -82,6 +87,15 @@ class PenggunaController extends Controller
             'role' => 'required|in:dosen,komisi_tesis,admin_prodi,kaprodi',
             'bidang_keahlian' => 'nullable|in:studi,pendidikan',
             'kuota_bimbingan_maks' => 'nullable|integer|min:0|max:20',
+            // Pangkat/Golongan (mis. "Pembina / IV-a") dipakai sebagai sumber
+            // kolom "Pangkat Gol./Ruang" di dokumen Surat Tugas — berlaku
+            // untuk SEMUA peran staf (bukan cuma dosen), karena Komisi Tesis
+            // & Kaprodi sekarang juga bisa jadi penguji di Surat Tugas.
+            'pangkat_golongan' => 'nullable|string|max:100',
+            // Nomor WA dipakai WhatsAppNotifierService untuk mengirim
+            // notifikasi "undangan_menguji" ke dewan penguji — tanpa ini
+            // WA Blast akan selalu gagal dengan pesan "nomor WA kosong".
+            'nomor_wa' => 'nullable|string|max:20',
         ]);
 
         $user = User::create([
@@ -89,10 +103,12 @@ class PenggunaController extends Controller
             'name' => $validated['name'],
             'identifier' => $validated['identifier'],
             'email' => $validated['email'],
+            'nomor_wa' => $validated['nomor_wa'] ?? null,
             'password' => Hash::make('user123'),
             'role' => $validated['role'],
             'bidang_keahlian' => $validated['role'] === 'dosen' ? ($validated['bidang_keahlian'] ?? 'studi') : null,
             'kuota_bimbingan_maks' => $validated['role'] === 'dosen' ? ($validated['kuota_bimbingan_maks'] ?? 8) : 0,
+            'pangkat_golongan' => $validated['pangkat_golongan'] ?? null,
         ]);
         $user->assignRole($validated['role']);
 
@@ -118,6 +134,10 @@ class PenggunaController extends Controller
             'name' => 'required|string|max:255',
             'identifier' => 'required|string|max:50|unique:users,identifier,'.$user->id,
             'email' => 'required|string|email|max:255|unique:users,email,'.$user->id,
+            // Berlaku untuk mahasiswa MAUPUN dosen/staf — keduanya menerima
+            // notifikasi WA (jadwal_terkunci untuk mahasiswa, undangan_menguji
+            // untuk dosen).
+            'nomor_wa' => 'nullable|string|max:20',
         ];
 
         $isStaf = $user->role !== 'mahasiswa';
@@ -125,6 +145,10 @@ class PenggunaController extends Controller
             $rules['role'] = 'required|in:dosen,komisi_tesis,admin_prodi,kaprodi';
             $rules['bidang_keahlian'] = 'nullable|in:studi,pendidikan';
             $rules['kuota_bimbingan_maks'] = 'nullable|integer|min:0|max:20';
+            // Sama seperti storeDosen() — berlaku untuk semua peran staf,
+            // bukan cuma dosen, supaya Pangkat Gol./Ruang Komisi Tesis/
+            // Kaprodi yang jadi penguji juga bisa diisi lewat sini.
+            $rules['pangkat_golongan'] = 'nullable|string|max:100';
         }
 
         $validated = $request->validate($rules);
@@ -132,11 +156,13 @@ class PenggunaController extends Controller
         $user->name = $validated['name'];
         $user->identifier = $validated['identifier'];
         $user->email = $validated['email'];
+        $user->nomor_wa = $validated['nomor_wa'] ?? null;
 
         if ($isStaf) {
             $user->role = $validated['role'];
             $user->bidang_keahlian = $validated['role'] === 'dosen' ? ($validated['bidang_keahlian'] ?? 'studi') : null;
             $user->kuota_bimbingan_maks = $validated['role'] === 'dosen' ? ($validated['kuota_bimbingan_maks'] ?? 8) : 0;
+            $user->pangkat_golongan = $validated['pangkat_golongan'] ?? null;
             $user->assignRole($validated['role']);
         }
 

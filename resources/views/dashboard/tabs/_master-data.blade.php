@@ -44,7 +44,7 @@
                                 <div class="flex flex-wrap gap-1.5">
                                     @if($bolehKelola)
                                     <button type="button" class="ui-btn ui-btn-sm ui-btn-outline"
-                                        @click="editUser = { id: '{{ $m->id }}', name: @js($m->name), identifier: @js($m->identifier), email: @js($m->email) }">Edit</button>
+                                        @click="editUser = { id: '{{ $m->id }}', name: @js($m->name), identifier: @js($m->identifier), email: @js($m->email), nomor_wa: @js($m->nomor_wa) }">Edit</button>
                                     @endif
                                     @if($bolehReset)
                                     <form action="{{ route('pengguna.resetPassword', $m) }}" method="POST" onsubmit="return confirm('Reset password {{ $m->name }} ke user123?')">
@@ -86,6 +86,11 @@
                             <label class="ui-label">Email</label>
                             <input type="email" name="email" class="ui-input" required>
                         </div>
+                        <div class="ui-field">
+                            <label class="ui-label">Nomor WhatsApp</label>
+                            <input type="text" name="nomor_wa" class="ui-input" placeholder="mis. 081234567890">
+                            <p class="text-[11px] text-slate-400 mt-1">Dipakai untuk mengirim notifikasi jadwal sidang via WhatsApp. Boleh dikosongkan.</p>
+                        </div>
                         <p class="text-[11.5px] text-slate-500 mb-3">Password default setelah dibuat: <strong>user123</strong>.</p>
                         <div class="flex justify-end gap-2">
                             <button type="button" @click="showAdd = false" class="ui-btn ui-btn-sm ui-btn-outline">Batal</button>
@@ -114,6 +119,11 @@
                             <div class="ui-field">
                                 <label class="ui-label">Email</label>
                                 <input type="email" name="email" class="ui-input" x-model="editUser.email" required>
+                            </div>
+                            <div class="ui-field">
+                                <label class="ui-label">Nomor WhatsApp</label>
+                                <input type="text" name="nomor_wa" class="ui-input" x-model="editUser.nomor_wa" placeholder="mis. 081234567890">
+                                <p class="text-[11px] text-slate-400 mt-1">Dipakai untuk mengirim notifikasi jadwal sidang via WhatsApp. Boleh dikosongkan.</p>
                             </div>
                             <div class="flex justify-end gap-2">
                                 <button type="button" @click="editUser = null" class="ui-btn ui-btn-sm ui-btn-outline">Batal</button>
@@ -146,7 +156,7 @@
                             <div class="flex flex-wrap gap-1.5">
                                 @if($bolehKelola)
                                 <button type="button" class="ui-btn ui-btn-sm ui-btn-outline"
-                                    @click="editStaf = { id: '{{ $d->id }}', name: @js($d->name), identifier: @js($d->identifier), email: @js($d->email), role: @js($d->role), bidang_keahlian: @js($d->bidang_keahlian), kuota_bimbingan_maks: @js($d->kuota_bimbingan_maks) }">Edit</button>
+                                    @click="editStaf = { id: '{{ $d->id }}', name: @js($d->name), identifier: @js($d->identifier), email: @js($d->email), role: @js($d->role), bidang_keahlian: @js($d->bidang_keahlian), kuota_bimbingan_maks: @js($d->kuota_bimbingan_maks), pangkat_golongan: @js($d->pangkat_golongan), nomor_wa: @js($d->nomor_wa) }">Edit</button>
                                 @endif
                                 @if($bolehReset)
                                 <form action="{{ route('pengguna.resetPassword', $d) }}" method="POST" onsubmit="return confirm('Reset password {{ $d->name }} ke user123?')">
@@ -207,6 +217,16 @@
                                 <input type="number" name="kuota_bimbingan_maks" class="ui-input" value="8" min="0" max="20">
                             </div>
                         </div>
+                        <div class="ui-field">
+                            <label class="ui-label">Pangkat Gol./Ruang</label>
+                            <input type="text" name="pangkat_golongan" class="ui-input" placeholder="mis. Pembina / IV-a">
+                            <p class="text-[11px] text-slate-400 mt-1">Dipakai otomatis mengisi kolom "Pangkat Gol./Ruang" di dokumen Surat Tugas. Berlaku untuk semua peran, bukan cuma Dosen.</p>
+                        </div>
+                        <div class="ui-field">
+                            <label class="ui-label">Nomor WhatsApp</label>
+                            <input type="text" name="nomor_wa" class="ui-input" placeholder="mis. 081234567890">
+                            <p class="text-[11px] text-slate-400 mt-1">Dipakai untuk mengirim undangan menguji via WhatsApp (menu WA Blast). Boleh dikosongkan.</p>
+                        </div>
                         <p class="text-[11.5px] text-slate-500 mb-3">Password default setelah dibuat: <strong>user123</strong>.</p>
                         <div class="flex justify-end gap-2">
                             <button type="button" @click="showAddStaf = false" class="ui-btn ui-btn-sm ui-btn-outline">Batal</button>
@@ -256,6 +276,16 @@
                                     <label class="ui-label">Kuota Bimbingan Maks</label>
                                     <input type="number" name="kuota_bimbingan_maks" class="ui-input" x-model="editStaf.kuota_bimbingan_maks" min="0" max="20">
                                 </div>
+                            </div>
+                            <div class="ui-field">
+                                <label class="ui-label">Pangkat Gol./Ruang</label>
+                                <input type="text" name="pangkat_golongan" class="ui-input" x-model="editStaf.pangkat_golongan" placeholder="mis. Pembina / IV-a">
+                                <p class="text-[11px] text-slate-400 mt-1">Dipakai otomatis mengisi kolom "Pangkat Gol./Ruang" di dokumen Surat Tugas. Berlaku untuk semua peran, bukan cuma Dosen.</p>
+                            </div>
+                            <div class="ui-field">
+                                <label class="ui-label">Nomor WhatsApp</label>
+                                <input type="text" name="nomor_wa" class="ui-input" x-model="editStaf.nomor_wa" placeholder="mis. 081234567890">
+                                <p class="text-[11px] text-slate-400 mt-1">Dipakai untuk mengirim undangan menguji via WhatsApp (menu WA Blast). Boleh dikosongkan.</p>
                             </div>
                             <div class="flex justify-end gap-2">
                                 <button type="button" @click="editStaf = null" class="ui-btn ui-btn-sm ui-btn-outline">Batal</button>

@@ -15,6 +15,7 @@ use App\Http\Controllers\Dokumen\DokumenCetakController;
 use App\Http\Controllers\Dokumen\VerifikasiDokumenController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PenggunaController;
+use App\Http\Controllers\ProfileController;
 
 // "/" dicek otentikasi DI DALAM controller (bukan via middleware blanket),
 // supaya pengunjung yang belum login diarahkan ke /beranda (halaman publik)
@@ -54,6 +55,15 @@ Route::middleware('guest')->group(function () {
 });
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
 
+// Edit Profil Saya — tersedia untuk SEMUA peran yang sudah login
+// (mahasiswa, dosen, komisi_tesis, kaprodi, admin_prodi). Lihat catatan
+// di ProfileController kenapa ini terpisah dari PenggunaController.
+Route::middleware('auth')->prefix('profile')->name('profile.')->group(function () {
+    Route::get('/', [ProfileController::class, 'edit'])->name('edit');
+    Route::put('/', [ProfileController::class, 'update'])->name('update');
+    Route::put('/password', [ProfileController::class, 'updatePassword'])->name('updatePassword');
+});
+
 // FR-01: Pengajuan Judul & Penetapan Pembimbing
 Route::middleware('auth')->prefix('pengajuan')->name('pengajuan.')->group(function () {
     Route::get('/', [PengajuanTesisController::class, 'index'])->name('index');
@@ -70,6 +80,12 @@ Route::middleware('auth')->prefix('pengajuan')->name('pengajuan.')->group(functi
     Route::middleware('role:komisi_tesis,kaprodi,admin_prodi')->group(function () {
         Route::delete('/{id}', [PengajuanTesisController::class, 'destroy'])->name('destroy');
         Route::post('/{id}/alokasi-pembimbing', [PengajuanTesisController::class, 'alokasiPembimbing'])->name('alokasi');
+
+        // Edit cepat judul/bidang fokus/abstrak dari tab Komisi Tesis
+        // (Sempro/Semhas/Ujian) — tidak terikat gate Tahap 1 seperti
+        // route 'update' di atas. Lihat catatan di
+        // PengajuanTesisController::updateDataProposal().
+        Route::post('/{id}/update-data', [PengajuanTesisController::class, 'updateDataProposal'])->name('updateData');
 
         // Modul 5: kepakaran & sisa kuota dosen (dipakai Komisi Tesis
         // sebelum menetapkan pembimbing) — GET /pengajuan/dosen/kuota-tersedia.
@@ -111,6 +127,8 @@ Route::middleware('auth')->prefix('semhas')->name('semhas.')->group(function () 
 
     Route::middleware('role:komisi_tesis,kaprodi,admin_prodi')->group(function () {
         Route::post('/verifikasi/{id}', [PendaftaranSemhasController::class, 'verifikasi'])->name('verifikasi');
+        Route::put('/{id}', [PendaftaranSemhasController::class, 'update'])->name('update');
+        Route::post('/{id}/update', [PendaftaranSemhasController::class, 'update'])->name('update.post');
         Route::post('/plotting-jadwal/{pengajuanId}', [KomisiTesisController::class, 'plottingSemhas'])->name('plotting');
     });
 });
@@ -125,8 +143,11 @@ Route::middleware('auth')->prefix('ujian')->name('ujian.')->group(function () {
     Route::middleware('role:dosen,komisi_tesis,kaprodi,admin_prodi')
         ->post('/{id}/acc-pembimbing', [PendaftaranUjianController::class, 'accPembimbing'])->name('accPembimbing');
 
-    Route::middleware('role:komisi_tesis,kaprodi,admin_prodi')
-        ->post('/plotting-jadwal/{pengajuanId}', [KomisiTesisController::class, 'plottingUjian'])->name('plotting');
+    Route::middleware('role:komisi_tesis,kaprodi,admin_prodi')->group(function () {
+        Route::put('/{id}', [PendaftaranUjianController::class, 'update'])->name('update');
+        Route::post('/{id}/update', [PendaftaranUjianController::class, 'update'])->name('update.post');
+        Route::post('/plotting-jadwal/{pengajuanId}', [KomisiTesisController::class, 'plottingUjian'])->name('plotting');
+    });
 });
 
 // "Daftarkan Langsung" (Modul 11 lanjutan) — khusus Komisi Tesis, untuk

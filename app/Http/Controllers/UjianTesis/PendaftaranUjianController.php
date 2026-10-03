@@ -8,6 +8,9 @@ use App\Domain\Audit\Services\AuditLogger;
 use App\Domain\Notifikasi\Services\WhatsAppNotifierService;
 use App\Domain\UjianTesis\Models\PendaftaranUjian;
 use App\Domain\Pembimbing\Models\PengajuanTesis;
+use App\Domain\Sidang\Models\AktivitasSidang;
+use App\Domain\Sidang\Models\PengujiSidang;
+use App\Domain\Sidang\Services\AntiConflictScheduler;
 use App\Domain\StateEngine\Services\LifecycleStateMachine;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -250,5 +253,155 @@ class PendaftaranUjianController extends Controller
         }
 
         return redirect()->route('dashboard')->with('success', 'Persetujuan tertulis digital berhasil diberikan.');
+    }
+
+    /**
+     * Adopsi dari PendaftaranSemproController::update() — satu form yang
+     * sama: judul/bidang fokus/abstrak, link Naskah Tesis Lengkap,
+     * hari/tanggal + Ruangan/Link Zoom. BERBEDA dari Sempro/Semhas pada
+     * komposisi dewan penguji: Ujian Tesis TIDAK memakai peran Ketua/
+     * Sekretaris Penguji, melainkan Penguji Bidang Studi & Penguji Bidang
+     * Pendidikan (lihat KomisiTesisController::createSidangWithPenguji —
+     * $wajib untuk tahap 'ujian' = pembimbing_1, pembimbing_2, penguji_studi,
+     * penguji_pendidikan). Pembimbing utama & pendamping tetap tidak bisa
+     * diubah dari sini (tetap lewat menu Pengajuan).
+     */
+    public function update(Request $request, $id)
+    {
+        $ujian = PendaftaranUjian::with('pengajuanTesis.pembimbing1', 'pengajuanTesis.pembimbing2')->findOrFail($id);
+        $this->authorize('verifikasiPendaftaran', $ujian->pengajuanTesis);
+
+        $tesis = $ujian->pengajuanTesis;
+
+        $validated = $request->validate([
+            'judul_tesis' => 'required|string|max:500',
+            'bidang_fokus' => 'required|string|max:255',
+            'abstrak_rencana' => 'nullable|string',
+            'jadwal_usulan_sidang' => 'required|date',
+            'ruangan' => 'nullable|string|max:255',
+            'link_zoom' => 'nullable|string|max:500',
+            'penguji_studi_id' => 'nullable|uuid|exists:users,id',
+            'penguji_pendidikan_id' => 'nullable|uuid|exists:users,id',
+            // Sama seperti Naskah Lengkap Sempro: link (Google Drive/cloud
+            // lain), bukan upload file, supaya tidak kena batas ukuran
+            // upload PHP/hosting.
+            'naskah_tesis_lengkap_url' => 'nullable|url|max:1000',
+        ]);
+
+        if (!empty($validated['penguji_studi_id']) && $validated['penguji_studi_id'] === ($validated['penguji_pendidikan_id'] ?? null)) {
+            return back()->withErrors(['penguji_studi_id' => 'Penguji Bidang Studi dan Penguji Bidang Pendidikan tidak boleh dosen yang sama.'])->withInput();
+        }
+
+        foreach (['penguji_studi_id', 'penguji_pendidikan_id'] as $field) {
+            if (!empty($validated[$field]) && in_array($validated[$field], array_filter([$tesis->pembimbing_1_id, $tesis->pembimbing_2_id]), true)) {
+                return back()->withErrors([$field => 'Penguji eksternal tidak boleh sama dengan Pembimbing Utama atau Pendamping.'])->withInput();
+            }
+        }
+
+        $tesis->update([
+            'judul_tesis' => $validated['judul_tesis'],
+            'bidang_fokus' => $validated['bidang_fokus'],
+            'abstrak_rencana' => $validated['abstrak_rencana'] ?? null,
+        ]);
+
+        $dataUjian = [
+            'jadwal_usulan_sidang' => $validated['jadwal_usulan_sidang'],
+        ];
+        if (!empty($validated['naskah_tesis_lengkap_url'])) {
+            $dataUjian['naskah_tesis_lengkap_url'] = $validated['naskah_tesis_lengkap_url'];
+        }
+        $ujian->update($dataUjian);
+
+        $waktuMulai = Carbon::parse($validated['jadwal_usulan_sidang']);
+        $waktuSelesai = $waktuMulai->copy()->addHours(2);
+
+        $sidang = AktivitasSidang::firstOrNew([
+            'pengajuan_tesis_id' => $tesis->id,
+            'tahap_sidang' => 'ujian',
+        ]);
+
+        $dosenIds = array_values(array_filter([
+            $validated['penguji_studi_id'] ?? null,
+            $validated['penguji_pendidikan_id'] ?? null,
+            $tesis->pembimbing_1_id,
+            $tesis->pembimbing_2_id,
+        ]));
+
+        $conflicts = AntiConflictScheduler::checkConflict(
+            $waktuMulai->toDateTimeString(),
+            $waktuSelesai->toDateTimeString(),
+            $sidang->ruangan,
+            $dosenIds,
+            $sidang->exists ? $sidang->id : null
+        );
+        if (!empty($conflicts)) {
+            return back()->withErrors(['jadwal_usulan_sidang' => implode(' ', $conflicts)])->withInput();
+        }
+
+        $sidang->waktu_mulai = $waktuMulai;
+        $sidang->waktu_selesai = $waktuSelesai;
+        // Sama seperti Sempro: ruangan dikosongkan artinya memang daring
+        // (dipakai Link Zoom), BUKAN "pakai nilai lama" — 'TBA' cuma fallback
+        // kalau Ruangan MAUPUN Link Zoom sama-sama kosong.
+        $ruangan = $validated['ruangan'] ?? null;
+        $linkZoom = $validated['link_zoom'] ?? null;
+        if (!filled($ruangan) && !filled($linkZoom)) {
+            $ruangan = 'TBA';
+        }
+        $sidang->ruangan = $ruangan;
+        $sidang->link_zoom = $linkZoom;
+        if (!$sidang->exists) {
+            $sidang->komisi_tesis_id = $request->user()->id;
+            $sidang->is_locked = false;
+        }
+        $sidang->save();
+
+        $this->syncPengujiTetap($sidang, 'pembimbing_1', $tesis->pembimbing_1_id);
+        $this->syncPengujiTetap($sidang, 'pembimbing_2', $tesis->pembimbing_2_id);
+
+        if (!empty($validated['penguji_studi_id'])) {
+            $this->syncPengujiTetap($sidang, 'penguji_studi', $validated['penguji_studi_id']);
+        }
+        if (!empty($validated['penguji_pendidikan_id'])) {
+            $this->syncPengujiTetap($sidang, 'penguji_pendidikan', $validated['penguji_pendidikan_id']);
+        }
+
+        AuditLogger::log(
+            $request->user(),
+            'ujian.update',
+            'PendaftaranUjian',
+            $ujian->id,
+            "Judul/data proposal & jadwal/penguji Ujian Tesis {$tesis->mahasiswa?->name} diperbarui. Pembimbing tetap.",
+            [
+                'judul_tesis' => $validated['judul_tesis'],
+                'bidang_fokus' => $validated['bidang_fokus'],
+                'jadwal_usulan_sidang' => $validated['jadwal_usulan_sidang'],
+                'penguji_studi_id' => $validated['penguji_studi_id'] ?? null,
+                'penguji_pendidikan_id' => $validated['penguji_pendidikan_id'] ?? null,
+            ]
+        );
+
+        if ($request->wantsJson()) {
+            return response()->json(['status' => 'success', 'data' => $ujian->fresh()]);
+        }
+
+        return redirect()->route('dashboard')->with('success', 'Data proposal, jadwal, dan penguji Ujian Tesis berhasil diperbarui. Pembimbing utama & pendamping tidak diubah.');
+    }
+
+    protected function syncPengujiTetap(AktivitasSidang $sidang, string $peran, ?string $dosenId): void
+    {
+        if (!$dosenId) {
+            return;
+        }
+
+        PengujiSidang::updateOrCreate(
+            [
+                'sidang_id' => $sidang->id,
+                'peran_penguji' => $peran,
+            ],
+            [
+                'dosen_id' => $dosenId,
+            ]
+        );
     }
 }

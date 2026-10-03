@@ -5,6 +5,7 @@ namespace App\Domain\Dokumen\Services;
 use App\Domain\Dokumen\Models\DokumenCetak;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
@@ -61,6 +62,16 @@ class DocumentGeneratorService
 
     protected function generateBaru(string $kodeDokumen, array $config, $record, ?User $dicetakOleh, int $versiSebelumnya): Response
     {
+        // Semua dokumen resmi (Undangan, Surat Tugas, Berita Acara, Daftar
+        // Hadir, dst.) memakai ->translatedFormat() di template Blade-nya
+        // untuk menampilkan nama hari & bulan (mis. "Rabu, 7 Oktober 2026").
+        // Tanpa baris ini, locale default Laravel/Carbon di server adalah
+        // 'en', jadi translatedFormat() tetap keluar bahasa Inggris
+        // ("Wednesday, 07 October 2026") walau formatnya sudah benar.
+        // Diset di satu titik pusat ini (bukan per-view) supaya berlaku
+        // otomatis ke SEMUA dokumen, termasuk yang dibuat belakangan.
+        Carbon::setLocale('id');
+
         $versiBaru = $versiSebelumnya + 1;
         $hash = hash('sha256', $kodeDokumen . '|' . $record->id . '|v' . $versiBaru . '|' . Str::uuid());
         $nomorDokumen = $config['nomor'] ? ($config['nomor'])($record) : null;
@@ -75,12 +86,34 @@ class DocumentGeneratorService
 
         $tampilkanQr = !str_starts_with($kodeDokumen, 'SURAT-TUGAS') && $kodeDokumen !== 'SK-PEMBIMBING';
 
+        $adalahUndangan = str_starts_with($kodeDokumen, 'UNDANGAN');
+        $adalahSuratTugas = str_starts_with($kodeDokumen, 'SURAT-TUGAS');
+
         // Baris "Kode Dokumen / Nomor / Dicetak / Sistem" di bawah kop surat
         // sengaja disembunyikan khusus untuk dokumen Undangan (UNDANGAN-SEMPRO,
         // UNDANGAN-SEMHAS, dst) supaya tampilannya rapi seperti surat resmi
         // FKIP biasa — cukup kop + badan surat, tanpa baris metadata sistem.
         // QR verifikasi (tampilkanQr) TIDAK ikut dimatikan, tetap tampil.
-        $tampilkanMeta = $tampilkanQr && !str_starts_with($kodeDokumen, 'UNDANGAN');
+        $tampilkanMeta = $tampilkanQr && !$adalahUndangan;
+
+        // Undangan memakai kop resmi UNS (kuning-biru, lengkap alamat &
+        // kontak) sesuai contoh surat undangan resmi FKIP yang diberikan —
+        // berbeda dari kop generik dokumen lain. Judul form besar di tengah
+        // juga disembunyikan karena surat resmi langsung ke Nomor/Lampiran/Hal
+        // tanpa judul terpisah. QR verifikasi untuk Undangan ditaruh sendiri
+        // oleh view di bawah label "Ketua Program Studi" (menyatu dengan
+        // blok tanda tangan), bukan di blok QR generik pojok kanan bawah.
+        $footerLegalText = $adalahUndangan ? [
+            'Dokumen ini dicetak melalui Sistem Informasi Manajemen Tesis (SIM-TESIS) FKIP UNS dan dilengkapi kode QR untuk verifikasi keaslian.',
+            'Pindai (scan) kode QR di atas untuk memeriksa keabsahan nomor dan data dokumen ini secara daring.',
+        ] : null;
+
+        // Surat Tugas diterbitkan atas nama Dekan (ditandatangani Wakil
+        // Dekan I), bukan Ketua Program Studi — jadi pakai kop level
+        // FAKULTAS (tanpa baris "Program Studi Magister Pendidikan Guru
+        // Vokasi" & alamat kampus V Pabelan di kop Undangan), sesuai contoh
+        // kop resmi yang diberikan: hanya "Fakultas Keguruan dan Ilmu
+        // Pendidikan" + alamat Kentingan + fkip@mail.uns.ac.id.
 
         $pdf = Pdf::loadView("pdf.{$config['view']}", [
             'record' => $record,
@@ -92,6 +125,10 @@ class DocumentGeneratorService
             'dicetakAt' => $dicetakAt,
             'tampilkanQr' => $tampilkanQr,
             'tampilkanMeta' => $tampilkanMeta,
+            'kopAsset' => $adalahUndangan ? 'kop-undangan' : ($adalahSuratTugas ? 'kop-fakultas' : 'kop-fkip-pgv'),
+            'tampilkanJudul' => !$adalahUndangan,
+            'qrDitaruhDiKonten' => $adalahUndangan,
+            'footerLegalText' => $footerLegalText,
         ])->setPaper('a4');
 
         $binary = $pdf->output();

@@ -19,10 +19,10 @@ dosen-dosen berikut sebagai Dewan Penguji pada pelaksanaan <b>{{ $labelTahap }}<
 Pendidikan Guru Vokasi:</p>
 
 <table class="content-table">
-<tr><th style="width:30%">Nama / NIM Mahasiswa</th><td>{{ $tesis->mahasiswa->name }} / {{ $tesis->mahasiswa->identifier }}</td></tr>
-<tr><th>Judul Tesis</th><td>{{ $tesis->judul_tesis }}</td></tr>
-<tr><th>Hari, Tanggal</th><td>{{ $sidang->waktu_mulai->translatedFormat('l, d F Y') }}</td></tr>
-<tr><th>Waktu</th><td>{{ $sidang->waktu_mulai->format('H:i') }}&ndash;{{ $sidang->waktu_selesai->format('H:i') }} WIB</td></tr>
+<tr><th style="width:30%">Nama / NIM Mahasiswa</th><td>{{ $tesis?->mahasiswa?->name ?? '-' }} / {{ $tesis?->mahasiswa?->identifier ?? '-' }}</td></tr>
+<tr><th>Judul Tesis</th><td>{{ $tesis?->judul_tesis ?? '-' }}</td></tr>
+<tr><th>Hari, Tanggal</th><td>{{ $sidang->waktu_mulai?->translatedFormat('l, d F Y') ?? '-' }}</td></tr>
+<tr><th>Waktu</th><td>{{ $sidang->waktu_mulai?->format('H:i') ?? '-' }}&ndash;{{ $sidang->waktu_selesai?->format('H:i') ?? '-' }} WIB</td></tr>
 <tr><th>Tempat</th><td>{{ $sidang->ruangan ?? $sidang->link_zoom ?? '-' }}</td></tr>
 </table>
 
@@ -32,7 +32,7 @@ Pendidikan Guru Vokasi:</p>
 @foreach($sidang->pengujiSidangs as $i => $pi)
 <tr>
     <td>{{ $i + 1 }}</td>
-    <td>{{ $pi->dosen->name }}</td>
+    <td>{{ $pi->dosen?->name ?? '-' }}</td>
     <td>{{ str_replace('_', ' ', ucfirst($pi->peran_penguji)) }}</td>
 </tr>
 @endforeach
