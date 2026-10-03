@@ -1,6 +1,6 @@
 @if(!$myPengajuan)
 <x-ui.card title="Belum Ada Pengajuan Tesis">
-    <p class="text-slate-500 text-[13.5px]">Anda belum mengajukan judul tesis. Silakan isi form di tab "FR-01: Usulan &amp; Alokasi Pembimbing".</p>
+    <p class="text-slate-500 text-[13.5px]">Anda belum mengajukan judul tesis. Silakan isi form di tab "Usulan &amp; Alokasi Pembimbing".</p>
 </x-ui.card>
 @else
 <div class="flex flex-col gap-4">

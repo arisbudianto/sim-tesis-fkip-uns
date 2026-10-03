@@ -23,7 +23,7 @@
             :title="($isPengendali ? 'Rekap Nilai — ' : 'Input Nilai — ') . $judulTahap"
             :subtitle="$isPengendali
                 ? 'Komisi Tesis & Admin hanya menetapkan rekap dan keputusan sidang. Rincian I1–I10 diisi oleh masing-masing penguji.'
-                : ($pakai4Dimensi ? 'Isi rubrik 4 dimensi (FR-09) untuk sidang ini.' : 'Isi rubrik 10 indikator (FPT-TI-03) pada baris Anda.')"
+                : ($pakai4Dimensi ? 'Isi rubrik 4 dimensi untuk sidang ini.' : 'Isi rubrik 10 indikator (FPT-TI-03) pada baris Anda.')"
         />
 
         <x-ui.card title="Data Sidang">

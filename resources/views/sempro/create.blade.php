@@ -16,7 +16,7 @@
 
         <a href="{{ route('dashboard') }}" class="text-slate-500 hover:text-primary-800 text-[13px] font-semibold">&larr; Kembali ke Dashboard</a>
 
-        <x-ui.hero title="Pendaftaran Seminar Proposal (Sempro)" subtitle="FR-03 — Wajib diajukan minimal H-14 sebelum tanggal sidang." />
+        <x-ui.hero title="Pendaftaran Seminar Proposal (Sempro)" subtitle="Wajib diajukan minimal H-14 sebelum tanggal sidang." />
 
         <x-ui.card>
             <x-ui.info-row label="Nama Mahasiswa">{{ $tesis->mahasiswa->name }}</x-ui.info-row>

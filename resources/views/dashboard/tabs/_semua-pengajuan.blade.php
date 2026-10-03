@@ -63,7 +63,7 @@
                 </td>
             </tr>
             @empty
-            <tr><td colspan="5" class="text-center text-slate-500 py-8">Belum ada data pengajuan tesis. Silakan isi form pada tab FR-01.</td></tr>
+            <tr><td colspan="5" class="text-center text-slate-500 py-8">Belum ada data pengajuan tesis. Silakan isi form pada tab Tahap 1 — Bimbingan.</td></tr>
             @endforelse
         </tbody>
     </table>

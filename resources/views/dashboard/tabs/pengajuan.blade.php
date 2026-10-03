@@ -7,7 +7,7 @@
              MAHASISWA: Ajukan judul + usulan 2 pembimbing + upload FPT-TI-00
              ═══════════════════════════════════════════════════════════ --}}
         @if(!$myPengajuan)
-        <x-ui.card title="Ajukan Judul Tesis (FR-01)">
+        <x-ui.card title="Ajukan Judul Tesis">
             <form action="{{ route('pengajuan.store') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="ui-field">
@@ -172,7 +172,7 @@
         @include('dashboard.tabs._master-data')
     @endif
 
-    <x-ui.card title="Komisi Tesis: Alokasi Pembimbing 1 & 2 (FR-01)">
+    <x-ui.card title="Komisi Tesis: Alokasi Pembimbing 1 & 2">
 
         <div class="overflow-x-auto mb-5 -mx-1">
             <table class="ui-table">

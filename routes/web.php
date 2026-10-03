@@ -16,9 +16,20 @@ use App\Http\Controllers\Dokumen\VerifikasiDokumenController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PenggunaController;
 
-Route::get('/', [DashboardController::class, 'index'])->middleware('auth')->name('dashboard');
+// "/" dicek otentikasi DI DALAM controller (bukan via middleware blanket),
+// supaya pengunjung yang belum login diarahkan ke /beranda (halaman publik)
+// alih-alih ke /login. Yang sudah login tetap langsung masuk ke dashboard.
+Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 Route::post('/pengguna/{user}/reset-password', [PenggunaController::class, 'resetPassword'])
     ->middleware(['auth', 'role:admin_prodi,kaprodi,komisi_tesis'])->name('pengguna.resetPassword');
+
+// Tambah/Edit/Hapus akun Master Data (Mahasiswa & Dosen/Staf) — Modul 11.
+Route::middleware(['auth', 'role:admin_prodi,kaprodi,komisi_tesis'])->group(function () {
+    Route::post('/pengguna/mahasiswa', [PenggunaController::class, 'storeMahasiswa'])->name('pengguna.storeMahasiswa');
+    Route::post('/pengguna/dosen', [PenggunaController::class, 'storeDosen'])->name('pengguna.storeDosen');
+    Route::put('/pengguna/{user}', [PenggunaController::class, 'update'])->name('pengguna.update');
+    Route::delete('/pengguna/{user}', [PenggunaController::class, 'destroy'])->name('pengguna.destroy');
+});
 Route::get('/berkas/{path}', [BerkasController::class, 'show'])->middleware('auth')->where('path', '.*')->name('berkas.show');
 Route::post('/notifikasi/wa-blast', [WaBlastController::class, 'blast'])->middleware(['auth', 'role:komisi_tesis,kaprodi,admin_prodi'])->name('notifikasi.waBlast');
 
@@ -117,6 +128,13 @@ Route::middleware('auth')->prefix('ujian')->name('ujian.')->group(function () {
     Route::middleware('role:komisi_tesis,kaprodi,admin_prodi')
         ->post('/plotting-jadwal/{pengajuanId}', [KomisiTesisController::class, 'plottingUjian'])->name('plotting');
 });
+
+// "Daftarkan Langsung" (Modul 11 lanjutan) — khusus Komisi Tesis, untuk
+// mahasiswa lama yang Sempro/Semhas/Ujian Tesis-nya tidak melalui alur
+// pendaftaran mandiri (upload dokumen) di sistem ini. {tahap}: sempro|semhas|ujian.
+Route::middleware(['auth', 'role:komisi_tesis'])
+    ->post('/sidang/daftar-langsung/{tahap}/{pengajuanId}', [KomisiTesisController::class, 'daftarLangsung'])
+    ->name('sidang.daftarLangsung');
 
 // FR-09: Penilaian Rubrik Digital & BAP — khusus Dewan Penguji (dosen) & pengendali akademik.
 Route::middleware(['auth', 'role:dosen,komisi_tesis,kaprodi,admin_prodi'])->prefix('sidang')->name('sidang.')->group(function () {

@@ -16,6 +16,45 @@
         }
     @endphp
 
+    @if(Auth::check() && Auth::user()->hasRole('komisi_tesis'))
+    <x-ui.card title="Daftarkan Langsung (Mahasiswa Lama)"
+        subtitle="Khusus mahasiswa lama yang Sempro/Semhas/Ujian Tesis-nya tidak melalui alur pendaftaran mandiri di sistem ini. Setelah didaftarkan di sini, mahasiswa akan otomatis muncul pada form Plotting Jadwal & Dewan Penguji di bawah.">
+        <form id="form-daftar-langsung" method="POST">
+            @csrf
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div class="ui-field">
+                    <label class="ui-label">Mahasiswa</label>
+                    <select id="daftar-langsung-mahasiswa" class="ui-input" onchange="updateDaftarLangsungAction()" required>
+                        <option value="">-- Pilih Mahasiswa --</option>
+                        @foreach($pengajuans as $pe)
+                            <option value="{{ $pe->id }}">{{ $pe->mahasiswa->identifier ?? '' }} — {{ $pe->mahasiswa->name ?? '-' }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="ui-field">
+                    <label class="ui-label">Jenis Sidang</label>
+                    <select id="daftar-langsung-tahap" class="ui-input" onchange="updateDaftarLangsungAction()" required>
+                        <option value="">-- Pilih Jenis Sidang --</option>
+                        <option value="sempro">Seminar Proposal (Sempro)</option>
+                        <option value="semhas">Seminar Hasil (Semhas)</option>
+                        <option value="ujian">Ujian Tesis</option>
+                    </select>
+                </div>
+            </div>
+            <div class="ui-field">
+                <label class="ui-label">Tanggal/Jam Sidang (sesuai riwayat, boleh tanggal yang sudah lewat)</label>
+                <input type="datetime-local" name="jadwal_usulan_sidang" class="ui-input" required>
+            </div>
+            <div class="ui-field">
+                <label class="ui-label">Catatan (opsional)</label>
+                <input type="text" name="catatan" class="ui-input" placeholder="Contoh: migrasi data mahasiswa lama sebelum sistem ini berjalan">
+            </div>
+            <p class="text-[11.5px] text-slate-500 mb-3">Mahasiswa yang dipilih wajib sudah punya Pembimbing 1 & 2. Dokumen pendaftaran tidak diminta di sini — anggap sudah lengkap secara administratif.</p>
+            <button type="submit" class="ui-btn ui-btn-primary">Daftarkan Langsung</button>
+        </form>
+    </x-ui.card>
+    @endif
+
     @if(Auth::check() && in_array(Auth::user()->role, ['komisi_tesis', 'kaprodi', 'admin_prodi']))
     @php
         $eligiblePlotting = [];

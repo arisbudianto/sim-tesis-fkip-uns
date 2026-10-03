@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 
 class AuthController extends Controller
@@ -14,7 +15,7 @@ class AuthController extends Controller
     public function showLogin()
     {
         if (Auth::check()) {
-            return redirect()->route('dashboard');
+            return $this->redirectAfterLogin();
         }
         return view('auth.login');
     }
@@ -28,16 +29,11 @@ class AuthController extends Controller
 
         $remember = $request->filled('remember');
 
-        // Coba login via NIM/NIP/Username
-        if (Auth::attempt(['identifier' => $credentials['identifier'], 'password' => $credentials['password']], $remember)) {
+        // Coba login via NIM/NIP/Username, lalu via Email.
+        if (Auth::attempt(['identifier' => $credentials['identifier'], 'password' => $credentials['password']], $remember)
+            || Auth::attempt(['email' => $credentials['identifier'], 'password' => $credentials['password']],$remember)) {
             $request->session()->regenerate();
-            return redirect()->route('dashboard');
-        }
-
-        // Coba login via Email
-        if (Auth::attempt(['email' => $credentials['identifier'], 'password' => $credentials['password']], $remember)) {
-            $request->session()->regenerate();
-            return redirect()->route('dashboard');
+            return $this->redirectAfterLogin();
         }
 
         return back()->withErrors([
@@ -45,14 +41,64 @@ class AuthController extends Controller
         ])->onlyInput('identifier');
     }
 
+    /**
+     * Komisi Tesis langsung diarahkan ke menu "Dosen" (sidebar manajemen
+     * akun & jadwal sidang) setelah login, karena itu tugas harian mereka.
+     * Dashboard lengkap (Ringkasan + tab FR-01..FR-10) tetap bisa dibuka
+     * lewat link "Dashboard Lengkap" di sidebar, jadi tidak hilang akses.
+     *
+     * Route::has() dicek dulu supaya login tidak 500 kalau halaman
+     * "komisi.dosen" belum/sedang dibangun — begitu route-nya sudah
+     * didaftarkan di routes/web.php, redirect ini otomatis aktif tanpa
+     * perlu ubah file ini lagi.
+     */
+    protected function redirectAfterLogin()
+    {
+        if (Auth::user()->hasRole('komisi_tesis') && Route::has('komisi.dosen')) {
+            return redirect()->route('komisi.dosen');
+        }
+
+        return redirect()->route('dashboard');
+    }
+
     public function showRegister()
     {
-        return redirect()->route('login')->with('error', 'Pendaftaran akun mandiri ditutup. Hubungi Admin Prodi / Kaprodi untuk dibuatkan akun.');
+        if (Auth::check()) {
+            return $this->redirectAfterLogin();
+        }
+        return view('auth.register');
     }
 
     public function register(Request $request)
     {
-        return redirect()->route('login')->with('error', 'Pendaftaran akun mandiri ditutup. Hubungi Admin Prodi / Kaprodi.');
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'identifier' => 'required|string|max:50|unique:users,identifier',
+            'email' => 'required|string|email|max:255|unique:users,email',
+            'nomor_wa' => 'nullable|string|max:20',
+            'password' => 'required|string|min:6|confirmed',
+            'role' => 'required|in:mahasiswa,dosen',
+            'bidang_keahlian' => 'nullable|string',
+        ]);
+
+        $user = User::create([
+            'id' => (string) Str::uuid(),
+            'name' => $validated['name'],
+            'identifier' => $validated['identifier'],
+            'email' => $validated['email'],
+            'nomor_wa' => $validated['nomor_wa'] ?? null,
+            'password' => Hash::make($validated['password']),
+            'role' => $validated['role'],
+            'bidang_keahlian' => $validated['role'] === 'dosen' ? ($validated['bidang_keahlian'] ?? 'studi') : null,
+            'kuota_bimbingan_maks' => $validated['role'] === 'dosen' ? 8 : 0,
+        ]);
+
+        $user->assignRole($validated['role']);
+
+        Auth::login($user);
+        $request->session()->regenerate();
+
+        return redirect()->route('dashboard');
     }
 
     public function logout(Request $request)
@@ -64,12 +110,6 @@ class AuthController extends Controller
         return redirect()->route('public.index');
     }
 
-    /**
-     * === Reset Password (Modul 3, Tugas 1) ===
-     * Memakai Password broker bawaan Laravel (Illuminate\Support\Facades\Password)
-     * — bukan Breeze secara harfiah, tapi mekanisme intinya sama persis
-     * (token sekali pakai, expire 60 menit, dikirim ke email pengguna).
-     */
     public function showForgotPassword()
     {
         return view('auth.forgot-password');

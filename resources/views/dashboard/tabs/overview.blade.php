@@ -9,14 +9,14 @@
 
 @if($role === 'komisi_tesis')
     @include('dashboard.roles.komisi-tesis')
-    <div class="mt-4 flex flex-col gap-4">
+    <div id="data-master" class="mt-4 flex flex-col gap-4 scroll-mt-4">
         @include('dashboard.tabs._master-data')
     </div>
 @endif
 
 @if($role === 'admin_prodi')
     @include('dashboard.roles.admin-prodi')
-    <div class="mt-4 flex flex-col gap-4">
+    <div id="data-master" class="mt-4 flex flex-col gap-4 scroll-mt-4">
         @include('dashboard.tabs._master-data')
     </div>
 @endif
@@ -30,8 +30,10 @@
 @endif
 
 @if(in_array(Auth::user()->role, ['komisi_tesis', 'kaprodi', 'admin_prodi']))
-    @include('dashboard.tabs.audit')
-    <div class="mt-4">
+    <div id="audit-log" class="scroll-mt-4">
+        @include('dashboard.tabs.audit')
+    </div>
+    <div id="semua-pengajuan" class="mt-4 scroll-mt-4">
         <h3 class="text-[14px] font-extrabold text-primary-900 mb-2">Seluruh Pengajuan Tesis (Operasional)</h3>
         @include('dashboard.tabs._semua-pengajuan')
     </div>

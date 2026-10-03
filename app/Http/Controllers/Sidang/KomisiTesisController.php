@@ -8,6 +8,9 @@ use App\Domain\Audit\Services\AuditLogger;
 use App\Domain\Sidang\Models\AktivitasSidang;
 use App\Domain\Sidang\Models\PengujiSidang;
 use App\Domain\Pembimbing\Models\PengajuanTesis;
+use App\Domain\Sempro\Models\PendaftaranSempro;
+use App\Domain\Semhas\Models\PendaftaranSemhas;
+use App\Domain\UjianTesis\Models\PendaftaranUjian;
 use App\Domain\Sidang\Services\AntiConflictScheduler;
 use App\Domain\StateEngine\Services\LifecycleStateMachine;
 use App\Domain\Notifikasi\Services\WhatsAppNotifierService;
@@ -15,6 +18,93 @@ use Illuminate\Http\Request;
 
 class KomisiTesisController extends Controller
 {
+    /**
+     * "Daftarkan Langsung" — khusus Komisi Tesis, untuk mahasiswa LAMA yang
+     * Sempro/Semhas/Ujian Tesis-nya tidak melalui alur pendaftaran mandiri
+     * (upload dokumen H-14, dst) di sistem ini. Method ini membuat/menandai
+     * pendaftaran sebagai "verified" tanpa dokumen, lalu memaksa status_tahap
+     * mahasiswa ke tahap yang sesuai (lewat LifecycleStateMachine::rollback,
+     * satu-satunya jalur override manual yang sudah ada & tetap tercatat di
+     * state_transition_log). Setelah ini, mahasiswa akan otomatis muncul di
+     * form "Plotting Jadwal & Dewan Penguji Baru" yang sudah ada di tab Sidang,
+     * karena form itu memang membaca status_verifikasi_admin === 'verified'.
+     */
+    public function daftarLangsung(Request $request, string $tahap, string $pengajuanId)
+    {
+        $aktor = $request->user();
+        abort_unless($aktor->hasRole('komisi_tesis'), 403, 'Hanya Komisi Tesis yang boleh mendaftarkan sidang secara langsung.');
+
+        $peta = [
+            'sempro' => ['model' => PendaftaranSempro::class, 'statusKe' => 'tahap_2_sempro', 'label' => 'Seminar Proposal (Sempro)'],
+            'semhas' => ['model' => PendaftaranSemhas::class, 'statusKe' => 'tahap_3_semhas', 'label' => 'Seminar Hasil (Semhas)'],
+            'ujian'  => ['model' => PendaftaranUjian::class, 'statusKe' => 'tahap_4_ujian', 'label' => 'Ujian Tesis'],
+        ];
+        if (!isset($peta[$tahap])) {
+            return back()->withErrors(['error' => "Jenis sidang '{$tahap}' tidak dikenali."]);
+        }
+        $info = $peta[$tahap];
+
+        $tesis = PengajuanTesis::with('mahasiswa')->findOrFail($pengajuanId);
+
+        if (!$tesis->pembimbing_1_id || !$tesis->pembimbing_2_id) {
+            return back()->withErrors(['error' => "Tidak bisa mendaftarkan {$info['label']}: Pembimbing 1 & 2 mahasiswa ini belum ditetapkan."]);
+        }
+
+        if ($tesis->aktivitasSidangs()->where('tahap_sidang', $tahap)->exists()) {
+            return back()->withErrors(['error' => "Sidang {$info['label']} untuk {$tesis->mahasiswa?->name} sudah pernah diplotting, tidak perlu didaftarkan ulang."]);
+        }
+
+        $validated = $request->validate([
+            'jadwal_usulan_sidang' => 'required|date',
+            'catatan' => 'nullable|string|max:500',
+        ]);
+
+        $catatan = 'Didaftarkan langsung oleh Komisi Tesis untuk mahasiswa lama (tanpa alur pendaftaran mandiri).'
+            . (!empty($validated['catatan']) ? ' Catatan: ' . $validated['catatan'] : '');
+
+        $dataDasar = [
+            'jadwal_usulan_sidang' => $validated['jadwal_usulan_sidang'],
+            'status_verifikasi_admin' => 'verified',
+        ];
+
+        $model = $info['model'];
+        if ($tahap === 'sempro') {
+            $dataDasar['approval_pembimbing_1'] = true;
+            $dataDasar['approval_pembimbing_2'] = true;
+            $dataDasar['catatan_admin'] = $catatan;
+        } elseif ($tahap === 'semhas') {
+            $dataDasar['approval_pembimbing_1'] = true;
+            $dataDasar['approval_pembimbing_2'] = true;
+        } else { // ujian
+            $dataDasar['acc_tertulis_pembimbing_1'] = true;
+            $dataDasar['acc_tertulis_pembimbing_2'] = true;
+        }
+
+        $pendaftaran = $model::updateOrCreate(['pengajuan_tesis_id' => $tesis->id], $dataDasar);
+
+        // Override status_tahap manual — lewat jalur resmi (rollback()),
+        // tetap tercatat di state_transition_log dengan is_override = true,
+        // supaya jejak auditnya jelas ini bukan transisi normal.
+        if ($tesis->status_tahap !== $info['statusKe']) {
+            LifecycleStateMachine::rollback($tesis, $info['statusKe'], $aktor, $catatan);
+        }
+
+        AuditLogger::log(
+            $aktor,
+            'sidang.daftarLangsung',
+            'PengajuanTesis',
+            $tesis->id,
+            "Mendaftarkan {$info['label']} secara langsung untuk {$tesis->mahasiswa?->name} (mahasiswa lama).",
+            ['tahap' => $tahap, 'pendaftaran_id' => $pendaftaran->id]
+        );
+
+        if ($request->wantsJson()) {
+            return response()->json(['status' => 'success', 'data' => $pendaftaran]);
+        }
+
+        return redirect()->route('dashboard')->with('success', "{$info['label']} untuk {$tesis->mahasiswa?->name} berhasil didaftarkan langsung. Silakan lanjutkan plotting jadwal & dewan penguji di bawah.");
+    }
+
     public function plottingSempro(Request $request, $pengajuanId)
     {
         return $this->createSidangWithPenguji($request, $pengajuanId, 'sempro');

@@ -1,4 +1,4 @@
-<x-layouts.app title="Sistem Informasi Manajemen Tesis S2 Pendidikan Guru Vokasi">
+<x-layouts.app title="Sistem Informasi Manajemen Tesis S2 Pendidikan Guru Vokasi" :stats="$stats ?? null">
 
     <x-ui.hero
         title="Sistem Informasi Manajemen Tesis"

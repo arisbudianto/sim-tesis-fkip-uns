@@ -4,7 +4,7 @@
 
         <a href="{{ route('dashboard') }}" class="text-slate-500 hover:text-primary-800 text-[13px] font-semibold">&larr; Kembali ke Dashboard</a>
 
-        <x-ui.hero title="Daftar Pengajuan Tesis" subtitle="Seluruh pengajuan judul &amp; status penetapan pembimbing (FR-01)." />
+        <x-ui.hero title="Daftar Pengajuan Tesis" subtitle="Seluruh pengajuan judul &amp; status penetapan pembimbing." />
 
         <x-ui.card>
             <div class="overflow-x-auto -mx-1">

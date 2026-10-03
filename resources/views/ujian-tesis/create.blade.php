@@ -4,7 +4,7 @@
 
         <a href="{{ route('dashboard') }}" class="text-slate-500 hover:text-primary-800 text-[13px] font-semibold">&larr; Kembali ke Dashboard</a>
 
-        <x-ui.hero title="Pendaftaran Ujian Tesis" subtitle="FR-07 — Wajib diajukan minimal H-14, dengan 8 dokumen prasyarat administrasi." />
+        <x-ui.hero title="Pendaftaran Ujian Tesis" subtitle="Wajib diajukan minimal H-14, dengan 8 dokumen prasyarat administrasi." />
 
         <x-ui.card>
             <x-ui.info-row label="Nama Mahasiswa">{{ $tesis->mahasiswa->name }}</x-ui.info-row>

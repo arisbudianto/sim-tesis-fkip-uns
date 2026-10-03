@@ -22,9 +22,9 @@
             default => 'Penilaian Sidang',
         };
         $subPenilaian = match ($fokusTahap) {
-            'ujian' => 'Rubrik 4 dimensi (FR-09).',
+            'ujian' => 'Rubrik 4 dimensi.',
             'sempro', 'semhas' => 'Rubrik 10 indikator (FPT-TI-03).',
-            default => 'Sempro & Semhas: rubrik 10 indikator (FPT-TI-03). Ujian Tesis: rubrik 4 dimensi (FR-09).',
+            default => 'Sempro & Semhas: rubrik 10 indikator (FPT-TI-03). Ujian Tesis: rubrik 4 dimensi.',
         };
     @endphp
 

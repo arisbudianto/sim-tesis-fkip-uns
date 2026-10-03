@@ -51,4 +51,22 @@ window.updatePlottingAction = function (selectEl) {
     if (anggota2 && pembimbing2) anggota2.value = pembimbing2;
 };
 
+/**
+ * Helper untuk form "Daftarkan Langsung" (tab Sidang, khusus Komisi Tesis):
+ * mahasiswa & jenis sidang dipilih terpisah (dua dropdown), jadi action
+ * form baru bisa disusun begitu KEDUA pilihan sudah terisi.
+ */
+window.updateDaftarLangsungAction = function () {
+    const mhsSelect = document.getElementById('daftar-langsung-mahasiswa');
+    const tahapSelect = document.getElementById('daftar-langsung-tahap');
+    const form = document.getElementById('form-daftar-langsung');
+    if (!mhsSelect || !tahapSelect || !form) return;
+
+    const pengajuanId = mhsSelect.value;
+    const tahap = tahapSelect.value;
+    if (!pengajuanId || !tahap) return;
+
+    form.action = '/sidang/daftar-langsung/' + tahap + '/' + pengajuanId;
+};
+
 Alpine.start();

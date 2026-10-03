@@ -34,6 +34,12 @@ class DashboardController extends Controller
      */
     public function index(Request $request)
     {
+        // "/" tidak lagi di-gate oleh middleware 'auth' (lihat routes/web.php),
+        // supaya tamu yang belum login diarahkan ke /beranda, bukan /login.
+        if (!$request->user()) {
+            return redirect()->route('public.index');
+        }
+
         $user = $request->user();
         $stats = $this->statistikPipeline();
 
