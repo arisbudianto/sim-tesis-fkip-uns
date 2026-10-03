@@ -134,13 +134,26 @@ class KomisiTesisController extends Controller
                 : back()->withErrors(['error' => $blockReason]);
         }
 
+        // Sekretaris Penguji pada Sempro bersifat OPSIONAL (cuma Ketua Penguji
+        // + Pembimbing 1 & 2 yang wajib, 3 dewan penguji) — supaya baris
+        // kosong di form (select yang sengaja tidak diisi) tidak ikut kena
+        // validasi 'required', buang dulu entri yang dosen_id-nya kosong
+        // sebelum divalidasi sebagai array.
+        $pengujiMentah = collect($request->input('penguji', []))
+            ->filter(fn ($p) => !empty($p['dosen_id'] ?? null))
+            ->values()
+            ->all();
+        $request->merge(['penguji' => $pengujiMentah]);
+
+        $minPenguji = $tahap === 'sempro' ? 3 : 4;
+
         $validated = $request->validate([
             'waktu_mulai' => 'required|date',
             'waktu_selesai' => 'required|date|after:waktu_mulai',
             'ruangan' => 'nullable|string',
             'link_zoom' => 'nullable|string',
             'komisi_tesis_id' => 'required|uuid|exists:users,id',
-            'penguji' => 'required|array|min:4',
+            'penguji' => "required|array|min:{$minPenguji}",
             'penguji.*.dosen_id' => 'required|uuid|exists:users,id',
             'penguji.*.peran_penguji' => 'required|string|in:ketua_penguji,sekretaris_penguji,pembimbing_1,pembimbing_2,penguji_studi,penguji_pendidikan'
         ]);
@@ -156,25 +169,37 @@ class KomisiTesisController extends Controller
                 : back()->withErrors(['error' => $msg])->withInput();
         }
 
-        // Komposisi Dewan Penguji BERBEDA antara Sempro/Semhas dan Ujian
+        // Komposisi Dewan Penguji BERBEDA antara Sempro, Semhas, dan Ujian
         // Tesis (Modul 8 mengoreksi asumsi lama yang menyeragamkan semua
         // tahap):
-        // - Sempro/Semhas: Ketua Penguji & Sekretaris Penguji EKSTERNAL,
-        //   ditambah 2 Pembimbing sebagai anggota.
+        // - Sempro: Ketua Penguji + 2 Pembimbing WAJIB (3 dewan penguji).
+        //   Sekretaris Penguji eksternal bersifat OPSIONAL (jadi 4 kalau diisi).
+        // - Semhas: Ketua Penguji & Sekretaris Penguji EKSTERNAL, ditambah
+        //   2 Pembimbing sebagai anggota — tepat 4, sama seperti sebelumnya.
         // - Ujian Tesis: 2 Pembimbing BERPERAN sebagai Ketua & Sekretaris
         //   sidang, ditambah 1 Penguji Bidang Studi & 1 Penguji Bidang
         //   Pendidikan sebagai anggota eksternal (sesuai proposal Bab III-D).
         $peranList = array_column($validated['penguji'], 'peran_penguji');
-        $wajib = $tahap === 'ujian'
-            ? ['pembimbing_1', 'pembimbing_2', 'penguji_studi', 'penguji_pendidikan']
-            : ['ketua_penguji', 'sekretaris_penguji', 'pembimbing_1', 'pembimbing_2'];
-        $labelWajib = $tahap === 'ujian'
-            ? 'Pembimbing 1, Pembimbing 2, Penguji Bidang Studi, dan Penguji Bidang Pendidikan'
-            : 'Ketua Penguji, Sekretaris Penguji, Pembimbing 1, dan Pembimbing 2';
+        $wajib = match ($tahap) {
+            'ujian' => ['pembimbing_1', 'pembimbing_2', 'penguji_studi', 'penguji_pendidikan'],
+            'sempro' => ['ketua_penguji', 'pembimbing_1', 'pembimbing_2'],
+            default => ['ketua_penguji', 'sekretaris_penguji', 'pembimbing_1', 'pembimbing_2'],
+        };
+        $labelWajib = match ($tahap) {
+            'ujian' => 'Pembimbing 1, Pembimbing 2, Penguji Bidang Studi, dan Penguji Bidang Pendidikan',
+            'sempro' => 'Ketua Penguji, Pembimbing 1, dan Pembimbing 2 (Sekretaris Penguji opsional)',
+            default => 'Ketua Penguji, Sekretaris Penguji, Pembimbing 1, dan Pembimbing 2',
+        };
 
         $hilang = array_diff($wajib, $peranList);
-        if (count($validated['penguji']) !== 4 || !empty($hilang)) {
-            $msg = ucfirst($tahap) . " wajib memiliki tepat 4 dewan penguji dengan peran lengkap: {$labelWajib}.";
+        // Sempro: boleh 3 (tanpa Sekretaris) atau 4 (dengan Sekretaris).
+        // Semhas & Ujian: tetap wajib tepat 4, seperti semula.
+        $jumlahValid = $tahap === 'sempro'
+            ? in_array(count($validated['penguji']), [3, 4], true)
+            : count($validated['penguji']) === 4;
+        if (!$jumlahValid || !empty($hilang)) {
+            $keteranganJumlah = $tahap === 'sempro' ? 'minimal 3' : 'tepat 4';
+            $msg = ucfirst($tahap) . " wajib memiliki {$keteranganJumlah} dewan penguji dengan peran lengkap: {$labelWajib}.";
             return $request->wantsJson()
                 ? response()->json(['status' => 'error', 'message' => $msg], 422)
                 : back()->withErrors(['error' => $msg])->withInput();

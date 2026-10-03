@@ -8,7 +8,7 @@
 
 @php
     $tahapAktif = request('tahap', 'ringkasan');
-    $tahapValid = ['ringkasan','tahap_1_bimbingan','tahap_2_sempro','tahap_3_semhas','tahap_4_ujian','selesai_yudisium'];
+    $tahapValid = ['ringkasan','tahap_1_bimbingan','tahap_2_sempro','tahap_3_semhas','tahap_4_ujian','selesai_yudisium','master_data','audit_log','semua_pengajuan'];
     if (!in_array($tahapAktif, $tahapValid, true)) {
         $tahapAktif = 'ringkasan';
     }
@@ -25,6 +25,9 @@
         'tahap_3_semhas' => 'Tahap 3 — Semhas',
         'tahap_4_ujian' => 'Tahap 4 — Ujian Tesis',
         'selesai_yudisium' => 'Selesai — Yudisium',
+        'master_data' => 'Data Master',
+        'audit_log' => 'Audit Log & Histori',
+        'semua_pengajuan' => 'Seluruh Pengajuan',
     ];
 @endphp
 
@@ -113,6 +116,30 @@
             <h3 class="text-[16px] font-extrabold text-primary-900">Selesai — Yudisium</h3>
             @includeIf('dashboard.tabs.revisi')
             @include('dashboard.tabs._filter-tahap', ['filterStatus' => 'selesai_yudisium', 'judul' => 'Mahasiswa Lulus / Siap Yudisium', 'pengajuans' => $pengajuans])
+        </div>
+    @endif
+
+    {{-- Administrasi: masing-masing jadi tab tersendiri (bukan ditumpuk
+         jadi satu halaman panjang di Ringkasan) — diakses dari grup
+         "Administrasi" di sidebar. Pembatasan peran persis sama seperti
+         sebelumnya saat masih menyatu di tab Ringkasan. --}}
+    @if($tahapAktif === 'master_data' && in_array(Auth::user()->role, ['komisi_tesis', 'admin_prodi']))
+        <div class="flex flex-col gap-4">
+            <h3 class="text-[16px] font-extrabold text-primary-900">Data Master</h3>
+            @include('dashboard.tabs._master-data')
+        </div>
+    @endif
+
+    @if($tahapAktif === 'audit_log' && in_array(Auth::user()->role, ['komisi_tesis', 'kaprodi', 'admin_prodi']))
+        <div class="flex flex-col gap-4">
+            @include('dashboard.tabs.audit')
+        </div>
+    @endif
+
+    @if($tahapAktif === 'semua_pengajuan' && in_array(Auth::user()->role, ['komisi_tesis', 'kaprodi', 'admin_prodi']))
+        <div class="flex flex-col gap-4">
+            <h3 class="text-[16px] font-extrabold text-primary-900">Seluruh Pengajuan Tesis (Operasional)</h3>
+            @include('dashboard.tabs._semua-pengajuan')
         </div>
     @endif
 </section>

@@ -75,6 +75,13 @@ class DocumentGeneratorService
 
         $tampilkanQr = !str_starts_with($kodeDokumen, 'SURAT-TUGAS') && $kodeDokumen !== 'SK-PEMBIMBING';
 
+        // Baris "Kode Dokumen / Nomor / Dicetak / Sistem" di bawah kop surat
+        // sengaja disembunyikan khusus untuk dokumen Undangan (UNDANGAN-SEMPRO,
+        // UNDANGAN-SEMHAS, dst) supaya tampilannya rapi seperti surat resmi
+        // FKIP biasa — cukup kop + badan surat, tanpa baris metadata sistem.
+        // QR verifikasi (tampilkanQr) TIDAK ikut dimatikan, tetap tampil.
+        $tampilkanMeta = $tampilkanQr && !str_starts_with($kodeDokumen, 'UNDANGAN');
+
         $pdf = Pdf::loadView("pdf.{$config['view']}", [
             'record' => $record,
             'judul' => $config['judul'],
@@ -84,7 +91,7 @@ class DocumentGeneratorService
             'hashVerifikasi' => $hash,
             'dicetakAt' => $dicetakAt,
             'tampilkanQr' => $tampilkanQr,
-            'tampilkanMeta' => $tampilkanQr,
+            'tampilkanMeta' => $tampilkanMeta,
         ])->setPaper('a4');
 
         $binary = $pdf->output();

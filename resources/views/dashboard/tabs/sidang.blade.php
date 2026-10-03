@@ -14,6 +14,16 @@
         if ($fokusTahap) {
             $sidangUntukTabel = collect($sidangUntukTabel)->where('tahap_sidang', $fokusTahap);
         }
+
+        // Komisi Tesis & Kaprodi boleh ikut ditugaskan sebagai dewan penguji
+        // di SEMUA sidang (Sempro/Semhas/Ujian Tesis), tidak cuma dosen biasa.
+        // $dosens (dipakai di tempat lain seperti alokasi Pembimbing 1 & 2)
+        // sengaja TIDAK diubah — itu tetap khusus role='dosen'. Daftar calon
+        // penguji di form Plotting di bawah ini query terpisah supaya tidak
+        // ikut membuka Komisi Tesis/Kaprodi sebagai calon pembimbing tesis.
+        $calonPenguji = \App\Models\User::whereIn('role', ['dosen', 'komisi_tesis', 'kaprodi'])
+            ->orderBy('name')
+            ->get();
     @endphp
 
     @if(Auth::check() && Auth::user()->hasRole('komisi_tesis'))
@@ -134,38 +144,38 @@
                 </select>
             </div>
 
-            <div class="text-[12px] font-bold uppercase tracking-wider text-slate-500 mt-5 mb-3 pb-1.5 border-b border-slate-100">Dewan Penguji &mdash; 4 Dosen</div>
+            <div class="text-[12px] font-bold uppercase tracking-wider text-slate-500 mt-5 mb-3 pb-1.5 border-b border-slate-100">Dewan Penguji &mdash; {{ $fokusTahap === 'sempro' ? '3 Wajib, Sekretaris Opsional' : '4 Dosen' }}</div>
 
             <div class="grid grid-cols-2 gap-3.5">
                 <div class="ui-field">
                     <label class="ui-label">Ketua Penguji</label>
                     <select name="penguji[0][dosen_id]" class="ui-input" required>
-                        <option value="">-- Pilih Dosen --</option>
-                        @foreach($dosens as $d)<option value="{{ $d->id }}">{{ $d->name }}</option>@endforeach
+                        <option value="">-- Pilih Dosen/Komisi Tesis/Kaprodi --</option>
+                        @foreach($calonPenguji as $d)<option value="{{ $d->id }}">{{ $d->name }}</option>@endforeach
                     </select>
                     <input type="hidden" name="penguji[0][peran_penguji]" value="ketua_penguji">
                 </div>
                 <div class="ui-field">
-                    <label class="ui-label">Sekretaris Penguji</label>
-                    <select name="penguji[1][dosen_id]" class="ui-input" required>
-                        <option value="">-- Pilih Dosen --</option>
-                        @foreach($dosens as $d)<option value="{{ $d->id }}">{{ $d->name }}</option>@endforeach
+                    <label class="ui-label">Sekretaris Penguji{{ $fokusTahap === 'sempro' ? ' (opsional)' : '' }}</label>
+                    <select name="penguji[1][dosen_id]" class="ui-input" {{ $fokusTahap === 'sempro' ? '' : 'required' }}>
+                        <option value="">{{ $fokusTahap === 'sempro' ? '-- Tidak diisi (opsional) --' : '-- Pilih Dosen/Komisi Tesis/Kaprodi --' }}</option>
+                        @foreach($calonPenguji as $d)<option value="{{ $d->id }}">{{ $d->name }}</option>@endforeach
                     </select>
                     <input type="hidden" name="penguji[1][peran_penguji]" value="sekretaris_penguji">
                 </div>
                 <div class="ui-field">
                     <label class="ui-label">Anggota 1 (Pembimbing 1)</label>
                     <select id="plotting-anggota1" name="penguji[2][dosen_id]" class="ui-input" required>
-                        <option value="">-- Pilih Dosen --</option>
-                        @foreach($dosens as $d)<option value="{{ $d->id }}">{{ $d->name }}</option>@endforeach
+                        <option value="">-- Pilih Dosen/Komisi Tesis/Kaprodi --</option>
+                        @foreach($calonPenguji as $d)<option value="{{ $d->id }}">{{ $d->name }}</option>@endforeach
                     </select>
                     <input type="hidden" name="penguji[2][peran_penguji]" value="pembimbing_1">
                 </div>
                 <div class="ui-field">
                     <label class="ui-label">Anggota 2 (Pembimbing 2)</label>
                     <select id="plotting-anggota2" name="penguji[3][dosen_id]" class="ui-input" required>
-                        <option value="">-- Pilih Dosen --</option>
-                        @foreach($dosens as $d)<option value="{{ $d->id }}">{{ $d->name }}</option>@endforeach
+                        <option value="">-- Pilih Dosen/Komisi Tesis/Kaprodi --</option>
+                        @foreach($calonPenguji as $d)<option value="{{ $d->id }}">{{ $d->name }}</option>@endforeach
                     </select>
                     <input type="hidden" name="penguji[3][peran_penguji]" value="pembimbing_2">
                 </div>

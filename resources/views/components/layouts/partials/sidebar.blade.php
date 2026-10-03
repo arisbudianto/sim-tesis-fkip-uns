@@ -62,18 +62,23 @@
             @if($navIsPengendali)
                 <div class="text-[10px] font-extrabold uppercase tracking-[0.12em] text-primary-700/70 px-3 mt-5 mb-2">Administrasi</div>
 
-                <a href="{{ route('dashboard') }}#semua-pengajuan"
-                   class="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] mb-1 text-slate-600 font-semibold hover:bg-slate-50 hover:text-primary-800 transition-colors">
+                <a href="{{ route('dashboard', ['tahap' => 'semua_pengajuan']) }}"
+                   class="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] mb-1 transition-colors
+                          {{ $navTahapAktif === 'semua_pengajuan' ? 'bg-slate-100 text-primary-900 font-extrabold' : 'text-slate-600 font-semibold hover:bg-slate-50 hover:text-primary-800' }}">
                     <x-ui.icon name="table-cells" class="h-[18px] w-[18px] shrink-0" />
                     Seluruh Pengajuan
                 </a>
-                <a href="{{ route('dashboard') }}#data-master"
-                   class="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] mb-1 text-slate-600 font-semibold hover:bg-slate-50 hover:text-primary-800 transition-colors">
+                @if($navUser->hasAnyRole(['komisi_tesis', 'admin_prodi']))
+                <a href="{{ route('dashboard', ['tahap' => 'master_data']) }}"
+                   class="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] mb-1 transition-colors
+                          {{ $navTahapAktif === 'master_data' ? 'bg-slate-100 text-primary-900 font-extrabold' : 'text-slate-600 font-semibold hover:bg-slate-50 hover:text-primary-800' }}">
                     <x-ui.icon name="circle-stack" class="h-[18px] w-[18px] shrink-0" />
                     Data Master
                 </a>
-                <a href="{{ route('dashboard') }}#audit-log"
-                   class="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] mb-1 text-slate-600 font-semibold hover:bg-slate-50 hover:text-primary-800 transition-colors">
+                @endif
+                <a href="{{ route('dashboard', ['tahap' => 'audit_log']) }}"
+                   class="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] mb-1 transition-colors
+                          {{ $navTahapAktif === 'audit_log' ? 'bg-slate-100 text-primary-900 font-extrabold' : 'text-slate-600 font-semibold hover:bg-slate-50 hover:text-primary-800' }}">
                     <x-ui.icon name="clipboard-list" class="h-[18px] w-[18px] shrink-0" />
                     Audit Log & Histori
                 </a>
