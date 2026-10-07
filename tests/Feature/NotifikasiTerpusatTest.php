@@ -31,7 +31,8 @@ class NotifikasiTerpusatTest extends TestCase
 
     protected function fakeWhatsAppGateway(): void
     {
-        $this->fakeWhatsAppGateway();
+        Config::set('whatsapp.url', 'https://fake-gateway.test/send');
+        Config::set('whatsapp.token', 'fake-token');
         Config::set('whatsapp.secret', 'fake-secret');
     }
 
