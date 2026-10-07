@@ -169,6 +169,13 @@ class AlurLengkapIntegrationTest extends TestCase
             'batas_waktu_revisi' => now()->addDays(14)->toDateString(),
         ])->assertStatus(200);
 
+        // Keputusan yang memerlukan revisi TIDAK boleh memajukan tahap
+        // sebelum seluruh penguji ACC dan Kaprodi mengesahkan.
+        $this->tesis->refresh();
+        $this->assertSame('tahap_4_ujian', $this->tesis->status_tahap);
+        $revisiSebelumSubmit = RevisiDokumen::where('sidang_id', $sidangUjian->id)->firstOrFail();
+        $this->assertFalse($revisiSebelumSubmit->pengesahan_kaprodi);
+
         $this->actingAs($this->mahasiswa);
         $this->postJson(route('revisi.submitMatriks', $sidangUjian->id), [
             'naskah_revisi_final_url' => '/storage/revisi/final.pdf',
@@ -267,6 +274,12 @@ class AlurLengkapIntegrationTest extends TestCase
             'keputusan_sidang' => 'lulus_revisi_ringan',
             'batas_waktu_revisi' => now()->addDays(14)->toDateString(),
         ])->assertStatus(200);
+
+        $this->tesis->refresh();
+        $expectedTahap = $tahap === 'sempro' ? 'tahap_2_sempro' : 'tahap_3_semhas';
+        $this->assertSame($expectedTahap, $this->tesis->status_tahap);
+        $revisiSebelumSubmit = RevisiDokumen::where('sidang_id', $sidang->id)->firstOrFail();
+        $this->assertFalse($revisiSebelumSubmit->pengesahan_kaprodi);
 
         $this->actingAs($this->mahasiswa);
         $this->postJson(route('revisi.submitMatriks', $sidang->id), [

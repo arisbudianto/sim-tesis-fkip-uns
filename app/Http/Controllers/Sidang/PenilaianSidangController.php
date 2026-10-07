@@ -227,18 +227,24 @@ class PenilaianSidangController extends Controller
     {
         $sidang->loadMissing('pengajuanTesis', 'revisiDokumen');
 
+        $tanpaRevisi = $keputusan === 'lulus_tanpa_revisi';
+
         RevisiDokumen::updateOrCreate(
             ['sidang_id' => $sidang->id],
             [
                 'naskah_revisi_final_url' => $sidang->revisiDokumen->naskah_revisi_final_url ?? '-',
-                'status_approval_semua' => $keputusan === 'lulus_tanpa_revisi',
-                'pengesahan_kaprodi' => $keputusan !== 'ujian_ulang',
-                'disahkan_kaprodi_at' => $keputusan !== 'ujian_ulang' ? now() : null,
+                'status_approval_semua' => $tanpaRevisi,
+                'pengesahan_kaprodi' => $tanpaRevisi,
+                'disahkan_kaprodi_at' => $tanpaRevisi ? now() : null,
             ]
         );
 
         if ($keputusan === 'ujian_ulang') {
             return 'Keputusan ujian ulang: mahasiswa tetap di tahap ini.';
+        }
+
+        if (!$tanpaRevisi) {
+            return 'Keputusan memerlukan revisi: status mahasiswa tetap di tahap ini sampai seluruh penguji ACC dan Kaprodi mengesahkan revisi.';
         }
 
         $tesis = $sidang->pengajuanTesis;
