@@ -94,6 +94,28 @@ class OtorisasiMatrixTest extends TestCase
         $response->assertStatus(403);
     }
 
+
+    public function test_dosen_biasa_ditolak_mendaftar_sempro_milik_mahasiswa(): void
+    {
+        $dosen = User::factory()->dosen()->create();
+        $tesis = PengajuanTesis::factory()->denganPembimbingLengkap()->create();
+
+        $this->actingAs($dosen)
+            ->postJson(route('sempro.store', $tesis->id), [])
+            ->assertStatus(403);
+    }
+
+    public function test_mahasiswa_lain_ditolak_melihat_revisi_sidang(): void
+    {
+        $tesis = PengajuanTesis::factory()->denganPembimbingLengkap()->create();
+        $sidang = AktivitasSidang::factory()->create(['pengajuan_tesis_id' => $tesis->id]);
+        $mahasiswaLain = User::factory()->mahasiswa()->create();
+
+        $this->actingAs($mahasiswaLain)
+            ->get(route('revisi.index', $sidang->id))
+            ->assertStatus(403);
+    }
+
     public function test_endpoint_dashboard_tanpa_login_redirect_ke_login(): void
     {
         $response = $this->get(route('dashboard'));

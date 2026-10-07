@@ -215,6 +215,30 @@ class NotifikasiTerpusatTest extends TestCase
         Http::assertSentCount(1);
     }
 
+
+    public function test_dual_channel_tetap_mencatat_whatsapp_gagal_saat_email_berhasil(): void
+    {
+        Config::set('notifikasi.channels', ['email', 'whatsapp']);
+        Config::set('mail.default', 'smtp');
+        Mail::fake();
+        Config::set('whatsapp.url', null);
+        Config::set('whatsapp.token', null);
+        Config::set('whatsapp.secret', null);
+
+        $this->buatTemplateUji();
+        $mahasiswa = User::factory()->mahasiswa()->create([
+            'email' => 'budi@example.test',
+            'nomor_wa' => '081234567890',
+        ]);
+
+        $logs = WhatsAppNotifierService::kirimSemuaChannel('uji_coba', $mahasiswa, ['nama' => 'Budi', 'tujuan' => 'tes']);
+
+        $this->assertCount(2, $logs);
+        $this->assertDatabaseHas('notifikasi_log', ['template_key' => 'uji_coba', 'channel' => 'email', 'status' => 'terkirim']);
+        $this->assertDatabaseHas('notifikasi_log', ['template_key' => 'uji_coba', 'channel' => 'whatsapp', 'status' => 'gagal']);
+        Mail::assertSentCount(1);
+    }
+
     public function test_approval_pembimbing_semhas_memicu_notifikasi_ke_mahasiswa(): void
     {
         NotifikasiTemplate::create([
