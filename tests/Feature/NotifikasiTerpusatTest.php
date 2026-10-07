@@ -11,6 +11,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 /**
@@ -21,6 +22,18 @@ use Tests\TestCase;
 class NotifikasiTerpusatTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        Config::set('notifikasi.channels', ['whatsapp']);
+    }
+
+    protected function fakeWhatsAppGateway(): void
+    {
+        $this->fakeWhatsAppGateway();
+        Config::set('whatsapp.secret', 'fake-secret');
+    }
 
     protected function buatTemplateUji(): NotifikasiTemplate
     {
@@ -72,8 +85,7 @@ class NotifikasiTerpusatTest extends TestCase
 
     public function test_notifikasi_berhasil_tercatat_terkirim_saat_gateway_sukses(): void
     {
-        Config::set('whatsapp.url', 'https://fake-gateway.test/send');
-        Config::set('whatsapp.token', 'fake-token');
+        $this->fakeWhatsAppGateway();
         Http::fake(['fake-gateway.test/*' => Http::response(['status' => 'ok'], 200)]);
 
         $this->buatTemplateUji();
@@ -89,8 +101,7 @@ class NotifikasiTerpusatTest extends TestCase
 
     public function test_notifikasi_gagal_tercatat_saat_gateway_error(): void
     {
-        Config::set('whatsapp.url', 'https://fake-gateway.test/send');
-        Config::set('whatsapp.token', 'fake-token');
+        $this->fakeWhatsAppGateway();
         Http::fake(['fake-gateway.test/*' => Http::response(['error' => 'invalid'], 500)]);
 
         $this->buatTemplateUji();
@@ -121,8 +132,7 @@ class NotifikasiTerpusatTest extends TestCase
             'error_message' => 'Simulasi gagal.',
         ]);
 
-        Config::set('whatsapp.url', 'https://fake-gateway.test/send');
-        Config::set('whatsapp.token', 'fake-token');
+        $this->fakeWhatsAppGateway();
         Http::fake(['fake-gateway.test/*' => Http::response(['status' => 'ok'], 200)]);
 
         $this->artisan('notifikasi:retry')->assertSuccessful();
@@ -151,6 +161,57 @@ class NotifikasiTerpusatTest extends TestCase
 
         $log->refresh();
         $this->assertSame(5, $log->percobaan_ke);
+    }
+
+    public function test_email_only_mengirim_satu_email_dan_mencatat_channel_email(): void
+    {
+        Config::set('notifikasi.channels', ['email']);
+        Config::set('mail.default', 'smtp');
+        Mail::fake();
+
+        $this->buatTemplateUji();
+        $mahasiswa = User::factory()->mahasiswa()->create(['email' => 'budi@example.test']);
+        $logs = WhatsAppNotifierService::kirimSemuaChannel('uji_coba', $mahasiswa, ['nama' => 'Budi', 'tujuan' => 'tes']);
+
+        $this->assertCount(1, $logs);
+        $this->assertSame('email', $logs[0]->channel);
+        $this->assertSame('terkirim', $logs[0]->status);
+        $this->assertDatabaseHas('notifikasi_log', ['template_key' => 'uji_coba', 'channel' => 'email', 'status' => 'terkirim']);
+        Mail::assertSentCount(1);
+    }
+
+    public function test_whatsapp_only_mengirim_satu_whatsapp_dan_mencatat_channel_whatsapp(): void
+    {
+        $this->fakeWhatsAppGateway();
+        Http::fake(['fake-gateway.test/*' => Http::response(['status' => 'ok'], 200)]);
+
+        $this->buatTemplateUji();
+        $mahasiswa = User::factory()->mahasiswa()->create(['nomor_wa' => '081234567890']);
+        $logs = WhatsAppNotifierService::kirimSemuaChannel('uji_coba', $mahasiswa, ['nama' => 'Budi', 'tujuan' => 'tes']);
+
+        $this->assertCount(1, $logs);
+        $this->assertSame('whatsapp', $logs[0]->channel);
+        $this->assertSame('terkirim', $logs[0]->status);
+        Http::assertSentCount(1);
+    }
+
+    public function test_dual_channel_mencatat_email_dan_whatsapp_secara_independen(): void
+    {
+        Config::set('notifikasi.channels', ['email', 'whatsapp']);
+        Config::set('mail.default', 'smtp');
+        Mail::fake();
+        $this->fakeWhatsAppGateway();
+        Http::fake(['fake-gateway.test/*' => Http::response(['status' => 'ok'], 200)]);
+
+        $this->buatTemplateUji();
+        $mahasiswa = User::factory()->mahasiswa()->create(['email' => 'budi@example.test', 'nomor_wa' => '081234567890']);
+        $logs = WhatsAppNotifierService::kirimSemuaChannel('uji_coba', $mahasiswa, ['nama' => 'Budi', 'tujuan' => 'tes']);
+
+        $this->assertCount(2, $logs);
+        $this->assertDatabaseHas('notifikasi_log', ['template_key' => 'uji_coba', 'channel' => 'email', 'status' => 'terkirim']);
+        $this->assertDatabaseHas('notifikasi_log', ['template_key' => 'uji_coba', 'channel' => 'whatsapp', 'status' => 'terkirim']);
+        Mail::assertSentCount(1);
+        Http::assertSentCount(1);
     }
 
     public function test_approval_pembimbing_semhas_memicu_notifikasi_ke_mahasiswa(): void
