@@ -4,6 +4,22 @@
 
         <a href="{{ route('public.index') }}" class="text-slate-500 hover:text-primary-800 text-[13px] font-semibold">&larr; Kembali ke Halaman Utama</a>
 
+        <x-ui.card title="Unduh Panduan Lengkap">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div class="flex items-center gap-3">
+                    <div class="h-11 w-11 rounded-xl bg-primary-50 flex items-center justify-center shrink-0">
+                        <x-ui.icon name="book-open" class="h-5 w-5 text-primary-800" />
+                    </div>
+                    <div>
+                        <p class="text-[13.5px] font-bold text-primary-900">Panduan Penggunaan SIM-TESIS untuk Dosen</p>
+                        <p class="text-[12.5px] text-slate-500">Dokumen Word (.docx) — langkah demi langkah penggunaan sistem bagi Dosen Pembimbing &amp; Dewan Penguji, lengkap dengan tangkapan layar dan menu Edit Profil.</p>
+                    </div>
+                </div>
+                <a href="{{ asset('assets/panduan/Panduan_Dosen_SIM-TESIS.docx') }}" download
+                   class="ui-btn ui-btn-primary whitespace-nowrap">Unduh Panduan (.docx)</a>
+            </div>
+        </x-ui.card>
+
         <x-ui.card title="Standar Operasional Prosedur (SOP) Tesis Magister">
             <div class="flex flex-col gap-3.5">
                 <div class="rounded-xl border-l-4 border-primary-800 bg-slate-50 p-4">

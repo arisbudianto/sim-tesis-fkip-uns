@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Domain\Notifikasi\Models\NotifikasiLog;
+use App\Domain\Notifikasi\Services\EmailNotifierService;
 use App\Domain\Notifikasi\Services\WhatsAppNotifierService;
 use Illuminate\Console\Command;
 
@@ -16,14 +17,17 @@ use Illuminate\Console\Command;
 class RetryNotifikasiGagal extends Command
 {
     protected $signature = 'notifikasi:retry {--max=5 : Batas maksimal percobaan per notifikasi}';
-    protected $description = 'Retry notifikasi WhatsApp yang berstatus gagal (Modul 9)';
+    protected $description = 'Retry notifikasi (email/WhatsApp) yang berstatus gagal (Modul 9)';
 
     public function handle(): int
     {
         $maxPercobaan = (int) $this->option('max');
 
+        // Hanya channel yang sedang aktif yang di-retry, supaya log WA lama
+        // tidak terus diulang saat WA dimatikan (NOTIFIKASI_CHANNELS=email).
         $gagal = NotifikasiLog::where('status', 'gagal')
             ->where('percobaan_ke', '<', $maxPercobaan)
+            ->whereIn('channel', WhatsAppNotifierService::channelAktif())
             ->get();
 
         if ($gagal->isEmpty()) {
@@ -36,7 +40,10 @@ class RetryNotifikasiGagal extends Command
         $berhasil = 0;
         foreach ($gagal as $log) {
             $log->increment('percobaan_ke');
-            $hasil = WhatsAppNotifierService::kirimKeGateway($log->fresh());
+            $segar = $log->fresh();
+            $hasil = $segar->channel === 'email'
+                ? EmailNotifierService::kirimKeEmail($segar)
+                : WhatsAppNotifierService::kirimKeGateway($segar);
             if ($hasil->status === 'terkirim') {
                 $berhasil++;
             }

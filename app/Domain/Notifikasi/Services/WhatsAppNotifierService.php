@@ -34,23 +34,80 @@ class WhatsAppNotifierService
      */
     public static function kirim(string $templateKey, ?User $penerima, array $data, array $meta = [], ?string $nomorManual = null): NotifikasiLog
     {
-        $nomorTujuan = $nomorManual ?? $penerima?->nomor_wa;
+        $logs = self::kirimSemuaChannel($templateKey, $penerima, $data, $meta, $nomorManual);
+
+        // Callers lama hanya butuh satu hasil ringkas: utamakan channel yang
+        // berhasil, kalau tidak ada yang berhasil kembalikan yang pertama.
+        return collect($logs)->firstWhere('status', 'terkirim') ?? $logs[0];
+    }
+
+    /**
+     * Kirim ke SEMUA channel aktif (email dan/atau WhatsApp) untuk satu
+     * penerima. Tiap channel dicoba sendiri-sendiri dan hasilnya dicatat
+     * sendiri-sendiri di notifikasi_log: gagalnya satu channel (mis. WA
+     * belum dikonfigurasi) tidak menghalangi channel lain. Pintu tunggal
+     * multi-channel; channel diatur config/notifikasi.php (env
+     * NOTIFIKASI_CHANNELS). Nama kelas dipertahankan supaya seluruh
+     * controller pemanggil tidak perlu diubah.
+     *
+     * @return array<int, NotifikasiLog> satu log per channel aktif (tidak pernah kosong)
+     */
+    public static function kirimSemuaChannel(string $templateKey, ?User $penerima, array $data, array $meta = [], ?string $nomorManual = null): array
+    {
+        $channels = self::channelAktif();
 
         $template = NotifikasiTemplate::where('key', $templateKey)->where('is_active', true)->first();
 
         if (!$template) {
-            return self::catatLog($templateKey, $penerima, $nomorTujuan, "[Template '{$templateKey}' tidak ditemukan/tidak aktif]", 'gagal', $meta, "Template '{$templateKey}' tidak ditemukan di notifikasi_templates atau is_active = false.");
+            return [self::catatLog($templateKey, $penerima, self::tujuan($channels[0], $penerima, $nomorManual), "[Template '{$templateKey}' tidak ditemukan/tidak aktif]", 'gagal', $meta, "Template '{$templateKey}' tidak ditemukan di notifikasi_templates atau is_active = false.", $channels[0])];
         }
 
         $pesan = $template->render($data);
 
-        if (!$nomorTujuan) {
-            return self::catatLog($templateKey, $penerima, null, $pesan, 'gagal', $meta, 'Nomor WhatsApp tujuan kosong (penerima belum mengisi nomor_wa di profil).');
+        $logs = [];
+        foreach ($channels as $channel) {
+            $tujuan = self::tujuan($channel, $penerima, $nomorManual);
+
+            if (!$tujuan) {
+                $logs[] = self::catatLog($templateKey, $penerima, null, $pesan, 'gagal', $meta, $channel === 'email'
+                    ? 'Email tujuan kosong (penerima belum memiliki email di profil).'
+                    : 'Nomor WhatsApp tujuan kosong (penerima belum mengisi nomor_wa di profil).', $channel);
+                continue;
+            }
+
+            $log = self::catatLog($templateKey, $penerima, $tujuan, $pesan, 'pending', $meta, null, $channel);
+
+            $logs[] = $channel === 'email'
+                ? EmailNotifierService::kirimKeEmail($log)
+                : self::kirimKeGateway($log);
         }
 
-        $log = self::catatLog($templateKey, $penerima, $nomorTujuan, $pesan, 'pending', $meta, null);
+        return $logs;
+    }
 
-        return self::kirimKeGateway($log);
+    /**
+     * Channel yang aktif menurut config/notifikasi.php, sudah divalidasi.
+     * Tidak pernah kosong (fallback ke 'email').
+     *
+     * @return array<int, string>
+     */
+    public static function channelAktif(): array
+    {
+        $channels = array_values(array_unique(array_intersect(
+            (array) config('notifikasi.channels', ['email']),
+            ['email', 'whatsapp']
+        )));
+
+        return $channels ?: ['email'];
+    }
+
+    protected static function tujuan(string $channel, ?User $penerima, ?string $nomorManual): ?string
+    {
+        if ($channel === 'email') {
+            return $penerima?->email ?: null;
+        }
+
+        return $nomorManual ?? $penerima?->nomor_wa;
     }
 
     /**
@@ -115,13 +172,13 @@ class WhatsAppNotifierService
         }
     }
 
-    protected static function catatLog(string $templateKey, ?User $penerima, ?string $nomorTujuan, string $pesan, string $status, array $meta, ?string $errorMessage): NotifikasiLog
+    protected static function catatLog(string $templateKey, ?User $penerima, ?string $nomorTujuan, string $pesan, string $status, array $meta, ?string $errorMessage, string $channel = 'whatsapp'): NotifikasiLog
     {
         return NotifikasiLog::create([
             'penerima_id' => $penerima?->id,
             'penerima_nama' => $penerima?->name,
-            'nomor_tujuan' => $nomorTujuan,
-            'channel' => 'whatsapp',
+            'nomor_tujuan' => $nomorTujuan, // nomor WA ATAU alamat email, tergantung channel
+            'channel' => $channel,
             'template_key' => $templateKey,
             'pesan_terkirim' => $pesan,
             'status' => $status,

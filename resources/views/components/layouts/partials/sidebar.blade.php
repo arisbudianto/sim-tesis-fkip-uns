@@ -76,7 +76,7 @@
                     Data Master
                 </a>
                 @endif
-                @if($navUser->hasAnyRole(['komisi_tesis', 'admin_prodi']))
+                @if(in_array($navUser->role, ['komisi_tesis', 'admin_prodi'], true))
                 <a href="{{ route('dashboard', ['tahap' => 'audit_log']) }}"
                    class="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] mb-1 transition-colors
                           {{ $navTahapAktif === 'audit_log' ? 'bg-slate-100 text-primary-900 font-extrabold' : 'text-slate-600 font-semibold hover:bg-slate-50 hover:text-primary-800' }}">

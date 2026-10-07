@@ -13,10 +13,16 @@ class NotifikasiTemplateSeeder extends Seeder
             [
                 'key' => 'undangan_menguji',
                 'nama_template' => 'Undangan Menguji (Dewan Penguji)',
-                'deskripsi_placeholder' => '{nama_dosen} {nama_mahasiswa} {tahap_sidang} {waktu_mulai} {lokasi} {link_surat_tugas} {link_undangan} {link_naskah} {link_form_penilaian} {link_kalender_ics}',
-                'body' => "Yth. {nama_dosen},\n\n"
-                    . "Anda ditugaskan sebagai Dewan Penguji pada sidang {tahap_sidang} mahasiswa {nama_mahasiswa}.\n\n"
-                    . "Waktu: {waktu_mulai}\n{lokasi}\n\n"
+                'deskripsi_placeholder' => '{daftar_penguji} {nama_dosen} {nama_mahasiswa} {nim_mahasiswa} {tahap_sidang} {hari_tanggal} {pukul} {waktu_mulai} {lokasi} {link_surat_tugas} {link_undangan} {link_naskah} {link_form_penilaian} {link_kalender_ics}',
+                'body' => "Yth.\n"
+                    . "{daftar_penguji}\n\n"
+                    . "Mohon berkenan menjadi penguji {tahap_sidang} tesis an.\n"
+                    . "Nama : {nama_mahasiswa}\n"
+                    . "NIM : {nim_mahasiswa}\n\n"
+                    . "Yang insyaallah akan diselenggarakan pada :\n"
+                    . "Hari : {hari_tanggal}\n"
+                    . "Pukul : {pukul}\n"
+                    . "{lokasi}\n\n"
                     . "Dokumen terkait:\n"
                     . "- Surat Tugas: {link_surat_tugas}\n"
                     . "- Undangan Resmi: {link_undangan}\n"
@@ -37,10 +43,12 @@ class NotifikasiTemplateSeeder extends Seeder
             [
                 'key' => 'jadwal_terkunci',
                 'nama_template' => 'Jadwal Sidang Terkunci (ke Mahasiswa)',
-                'deskripsi_placeholder' => '{nama_mahasiswa} {tahap_sidang} {waktu_mulai} {lokasi} {link_kalender_ics}',
+                'deskripsi_placeholder' => '{nama_mahasiswa} {nim_mahasiswa} {tahap_sidang} {hari_tanggal} {pukul} {waktu_mulai} {lokasi} {link_kalender_ics}',
                 'body' => "Yth. {nama_mahasiswa},\n\n"
-                    . "Jadwal sidang {tahap_sidang} Anda sudah terkunci oleh Komisi Tesis.\n\n"
-                    . "Waktu: {waktu_mulai}\n{lokasi}\n\n"
+                    . "Jadwal sidang {tahap_sidang} Anda sudah dijadwalkan dan akan diselenggarakan pada :\n"
+                    . "Hari : {hari_tanggal}\n"
+                    . "Pukul : {pukul}\n"
+                    . "{lokasi}\n\n"
                     . "Sinkronkan ke kalender Anda: {link_kalender_ics}\n\n"
                     . "Mohon hadir tepat waktu.\nKomisi Tesis FKIP UNS",
             ],

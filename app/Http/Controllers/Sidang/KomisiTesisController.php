@@ -13,6 +13,7 @@ use App\Domain\Semhas\Models\PendaftaranSemhas;
 use App\Domain\UjianTesis\Models\PendaftaranUjian;
 use App\Domain\Sidang\Services\AntiConflictScheduler;
 use App\Domain\StateEngine\Services\LifecycleStateMachine;
+use App\Domain\Notifikasi\Services\SidangNotifikasiData;
 use App\Domain\Notifikasi\Services\WhatsAppNotifierService;
 use Illuminate\Http\Request;
 
@@ -272,37 +273,26 @@ class KomisiTesisController extends Controller
             ['tahap' => $tahap, 'jumlah_penguji' => count($validated['penguji'])]
         );
 
-        $lokasi = $sidang->ruangan ? "Ruang: {$sidang->ruangan}" : "Link Zoom: {$sidang->link_zoom}";
-        $namaMahasiswa = $sidang->pengajuanTesis->mahasiswa->name ?? '-';
-        $linkKalenderIcs = route('sidang.kalenderIcs', $sidang->id);
-        $linkNaskah = $this->getLinkNaskah($sidang->pengajuanTesis, $tahap);
-        [$linkSuratTugas, $linkUndangan] = $this->getLinkDokumenResmi($sidang, $tahap);
-        $linkFormPenilaian = route('dashboard');
-
+        // Data placeholder dirakit terpusat di SidangNotifikasiData (dipakai
+        // juga oleh kirim ulang manual di WaBlastController) supaya isi pesan
+        // di kedua jalur selalu sama.
         foreach ($sidang->pengujiSidangs as $ps) {
             if (!$ps->dosen) continue;
-            WhatsAppNotifierService::kirim('undangan_menguji', $ps->dosen, [
-                'nama_dosen' => $ps->dosen->name,
-                'nama_mahasiswa' => $namaMahasiswa,
-                'tahap_sidang' => strtoupper($tahap),
-                'waktu_mulai' => $sidang->waktu_mulai,
-                'lokasi' => $lokasi,
-                'link_surat_tugas' => $linkSuratTugas,
-                'link_undangan' => $linkUndangan,
-                'link_naskah' => $linkNaskah,
-                'link_form_penilaian' => $linkFormPenilaian,
-                'link_kalender_ics' => $linkKalenderIcs,
-            ], ['sidang_id' => $sidang->id, 'tahap' => $tahap]);
+            WhatsAppNotifierService::kirim(
+                'undangan_menguji',
+                $ps->dosen,
+                SidangNotifikasiData::untukUndangan($sidang, $ps->dosen),
+                ['sidang_id' => $sidang->id, 'tahap' => $tahap]
+            );
         }
 
         if ($sidang->pengajuanTesis->mahasiswa) {
-            WhatsAppNotifierService::kirim('jadwal_terkunci', $sidang->pengajuanTesis->mahasiswa, [
-                'nama_mahasiswa' => $namaMahasiswa,
-                'tahap_sidang' => strtoupper($tahap),
-                'waktu_mulai' => $sidang->waktu_mulai,
-                'lokasi' => $lokasi,
-                'link_kalender_ics' => $linkKalenderIcs,
-            ], ['sidang_id' => $sidang->id, 'tahap' => $tahap]);
+            WhatsAppNotifierService::kirim(
+                'jadwal_terkunci',
+                $sidang->pengajuanTesis->mahasiswa,
+                SidangNotifikasiData::untukMahasiswa($sidang),
+                ['sidang_id' => $sidang->id, 'tahap' => $tahap]
+            );
         }
 
         if ($request->wantsJson()) {
@@ -310,45 +300,6 @@ class KomisiTesisController extends Controller
         }
 
         return redirect()->route('dashboard')->with('success', "Plotting jadwal & dewan penguji {$tahap} berhasil disimpan.");
-    }
-
-    /**
-     * Link naskah mahasiswa yang relevan sesuai tahap sidang — dipakai di
-     * pesan undangan menguji supaya penguji langsung dapat naskah lengkap.
-     */
-    private function getLinkNaskah($tesis, string $tahap): string
-    {
-        return match ($tahap) {
-            'sempro' => $tesis->pendaftaranSempro->naskah_proposal_url ?? '(belum diunggah)',
-            'semhas' => $tesis->pendaftaranSemhas->naskah_bab_1_5_url ?? '(belum diunggah)',
-            'ujian' => $tesis->pendaftaranUjian->naskah_tesis_lengkap_url ?? '(belum diunggah)',
-            default => '-',
-        };
-    }
-
-    /**
-     * Link Surat Tugas & Undangan resmi (PDF) per tahap. Sempro & Semhas
-     * memakai template generik yang sama (lihat surat-tugas-sempro.blade.php
-     * & undangan-sempro.blade.php — sudah tidak hardcode teks tahap). Ujian
-     * Tesis dibedakan (perlu template Wadek I terpisah — lihat generateBundle()
-     * di DocumentGeneratorService untuk daftar lengkap dokumen per tahap).
-     */
-    private function getLinkDokumenResmi(AktivitasSidang $sidang, string $tahap): array
-    {
-        if ($tahap === 'sempro' || $tahap === 'semhas') {
-            $sufiks = $tahap === 'sempro' ? 'SEMPRO' : 'SEMHAS';
-            return [
-                route('dokumen.cetak', ['kode' => "SURAT-TUGAS-{$sufiks}", 'id' => $sidang->id]),
-                route('dokumen.cetak', ['kode' => "UNDANGAN-{$sufiks}", 'id' => $sidang->id]),
-            ];
-        }
-
-        // Ujian Tesis: Surat Tugas Wadek I sudah ada, Undangan Ujian belum
-        // punya template resmi tersendiri — fallback sementara ke dashboard.
-        return [
-            route('dokumen.cetak', ['kode' => 'SURAT-TUGAS-WADEK1', 'id' => $sidang->id]),
-            route('dashboard'),
-        ];
     }
 
     /**
